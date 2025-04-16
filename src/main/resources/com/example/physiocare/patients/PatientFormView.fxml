@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PatientDetailViewController">
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Patient Info">
+                    <fx:include source="PatientFormView.fxml"/>
+                </Tab>
+                <Tab text="Upcoming Appointments">
+                    <fx:include source="UpcomingAppointmentsView.fxml"/>
+                </Tab>
+                <Tab text="Appointment History">
+                    <fx:include source="HistoryAppointmentsView.fxml"/>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+</BorderPane>

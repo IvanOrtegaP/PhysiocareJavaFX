@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.controller.PatientDetailViewController" prefWidth="800" prefHeight="600">
+
+    <center>
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+
+                <!-- PESTAÑA 1: Datos del paciente -->
+                <Tab text="Patient Info">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+
+                        <GridPane hgap="10" vgap="10">
+                            <Label text="Name:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtName" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                            <Label text="Surname:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtSurname" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                            <Label text="Birth Date:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                            <DatePicker fx:id="dpBirthDate" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                            <Label text="Email:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                            <TextField fx:id="txtEmail" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+                        </GridPane>
+
+                        <HBox spacing="10" alignment="CENTER_RIGHT">
+                            <Button fx:id="btnEdit" text="Edit" onAction="#handleEdit"/>
+                            <Button fx:id="btnDelete" text="Delete" onAction="#handleDelete"/>
+                        </HBox>
+                    </VBox>
+                </Tab>
+
+                <!-- PESTAÑA 2: Próximas citas -->
+                <Tab text="Upcoming Appointments">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <TableView fx:id="tblUpcoming">
+                            <columns>
+                                <TableColumn fx:id="colDateUpcoming" text="Date" prefWidth="120"/>
+                                <TableColumn fx:id="colTimeUpcoming" text="Time" prefWidth="100"/>
+                                <TableColumn fx:id="colReasonUpcoming" text="Reason" prefWidth="250"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+                <!-- PESTAÑA 3: Historial -->
+                <Tab text="Appointment History">
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+                        <TableView fx:id="tblHistory">
+                            <columns>
+                                <TableColumn fx:id="colDateHistory" text="Date" prefWidth="120"/>
+                                <TableColumn fx:id="colTimeHistory" text="Time" prefWidth="100"/>
+                                <TableColumn fx:id="colDiagnosisHistory" text="Diagnosis" prefWidth="250"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                </Tab>
+
+            </tabs>
+        </TabPane>
+    </center>
+
+</BorderPane>
