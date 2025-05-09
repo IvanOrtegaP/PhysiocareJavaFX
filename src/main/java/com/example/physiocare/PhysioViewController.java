@@ -19,55 +19,41 @@ import java.util.regex.Pattern;
 
 public class PhysioViewController {
 
-
-    public enum Specialty {
-        SPORTS("Sports"),
-        NEUROLOGICAL("Neurological"),
-        PEDIATRIC("Pediatric"),
-        GERIATRIC("Geriatric"),
-        ONCOLOGICAL("Oncological");
-
-        private final String displayName;
-
-        Specialty(String displayName) {
-            this.displayName = displayName;
-        }
-
-        @Override
-        public String toString() {
-            return displayName;
-        }
-
-        public static Specialty fromString(String text) {
-            for (Specialty s : Specialty.values()) {
-                if (s.displayName.equalsIgnoreCase(text)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-    }
-
-    @FXML private TextField txtName;
-    @FXML private TextField txtSurname;
-    @FXML private ComboBox<String> cbSpecialty;
-    @FXML private TextField txtLicenseNumber;
-    @FXML private TextField txtEmail;
-    @FXML private TableView<Physio> tblPhysios;
-    @FXML private TableColumn<Physio, String> colName;
-    @FXML private TableColumn<Physio, String> colSurname;
-    @FXML private TableColumn<Physio, String> colSpecialty;
-    @FXML private TableColumn<Physio, String> colLicense;
-    @FXML private Button btnNew;
-    @FXML private Button btnSave;
-    @FXML private Button btnDelete;
-    @FXML private Label lblMessage;
-    @FXML private Button btnRefresh;
-    @FXML private TextField txtSearch;
-
-    private ObservableList<Physio> physios = FXCollections.observableArrayList();
-    private Physio currentPhysio = null;
+    private final ObservableList<Physio> physios = FXCollections.observableArrayList();
     private final Gson gson = new Gson();
+    @FXML
+    private TextField txtName;
+    @FXML
+    private TextField txtSurname;
+    @FXML
+    private ComboBox<String> cbSpecialty;
+    @FXML
+    private TextField txtLicenseNumber;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private TableView<Physio> tblPhysios;
+    @FXML
+    private TableColumn<Physio, String> colName;
+    @FXML
+    private TableColumn<Physio, String> colSurname;
+    @FXML
+    private TableColumn<Physio, String> colSpecialty;
+    @FXML
+    private TableColumn<Physio, String> colLicense;
+    @FXML
+    private Button btnNew;
+    @FXML
+    private Button btnSave;
+    @FXML
+    private Button btnDelete;
+    @FXML
+    private Label lblMessage;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private TextField txtSearch;
+    private Physio currentPhysio = null;
 
     @FXML
     private void initialize() {
@@ -108,27 +94,20 @@ public class PhysioViewController {
     }
 
     private void loadPhysios(String searchQuery) {
-        CompletableFuture.supplyAsync(() -> {
-            String url;
-            if (searchQuery != null && !searchQuery.isEmpty()) {
-                url = ServiceUtils.SERVER + "/physios/find?specialty=" + searchQuery;
+        String url = ServiceUtils.SERVER + (searchQuery != null && !searchQuery.isEmpty()
+                ? "/physios/find?specialty=" + searchQuery
+                : "/physios");
+
+        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
+                PhysioListResponse.class)).thenApply(response -> {
+            if (response == null || !response.isOk()) {
+                MessageUtils.showError("Error", "The physios list could not be loaded or no results were found.");
+                return null;
             } else {
-                url = ServiceUtils.SERVER + "/physios";
+                physios.setAll(response.getResult());
+                clearSelection();
+                return null;
             }
-
-            String response = ServiceUtils.getResponse(url, null, "GET");
-            System.out.println("DEBUG - JSON recibido de " + url + ":\n" + response);
-
-            return gson.fromJson(response, Physio[].class);
-        }).thenAccept(resultArray -> {
-            Platform.runLater(() -> {
-                if (resultArray != null) {
-                    physios.setAll(resultArray);
-                    clearSelection();
-                } else {
-                    MessageUtils.showError("Error", "The physios list could not be loaded or no results were found.");
-                }
-            });
         }).exceptionally(ex -> {
             ex.printStackTrace();
             Platform.runLater(() ->
@@ -196,18 +175,16 @@ public class PhysioViewController {
         final String method = currentPhysio == null ? "POST" : "PUT";
         final String jsonRequest = gson.toJson(physio);
 
-        CompletableFuture.supplyAsync(() -> {
-            String jsonResponse = ServiceUtils.getResponse(requestUrl, jsonRequest, method);
-            System.out.println("Response from server: " + jsonResponse);
-            return gson.fromJson(jsonResponse, PhysioResponse.class);
-        }).thenAccept(responseData -> {
+
+        ServiceUtils.getResponseAsync(requestUrl, jsonRequest, method).thenApply(json -> gson.fromJson(json
+                , PhysioResponse.class)).thenAccept(response -> {
             Platform.runLater(() -> {
-                if (responseData != null && responseData.getId() != null) {
-                    MessageUtils.showMessage("Success",
-                            "Physio " + (currentPhysio == null ? "created" : "updated") + " successfully");
+                if (response == null || !response.isOk()) {
                     loadPhysios();
                     disableForm(true);
                 } else {
+                    MessageUtils.showMessage("Success",
+                            "Physio " + (currentPhysio == null ? "created" : "updated") + " successfully");
                     loadPhysios();
                     disableForm(true);
                 }
@@ -232,22 +209,20 @@ public class PhysioViewController {
             if (userResponse == ButtonType.OK) {
                 final String deleteUrl = ServiceUtils.SERVER + "/physios/" + currentPhysio.getId();
 
-                CompletableFuture.supplyAsync(() -> {
-                    String responseJson = ServiceUtils.getResponse(deleteUrl, null, "DELETE");
-                    return gson.fromJson(responseJson, PhysioResponse.class);
-                }).thenAccept(responseData -> {
-                    Platform.runLater(() -> {
-                        if (responseData != null && responseData.getId() != null) {
-                            MessageUtils.showMessage("Success", "Physio deleted successfully");
-                            loadPhysios();
-                            clearForm();
-                            disableForm(true);
-                        } else {
-                            loadPhysios();
-                            clearForm();
-                            disableForm(true);
-                        }
-                    });
+                ServiceUtils.getResponseAsync(deleteUrl, null, "DELETE").thenApply(json ->
+                        gson.fromJson(json, PhysioResponse.class)).thenAccept(response -> {
+                            Platform.runLater(() -> {
+                                if(response == null || !response.isOk()){
+                                    loadPhysios();
+                                    clearForm();
+                                    disableForm(true);
+                                }else {
+                                    MessageUtils.showMessage("Success", "Physio deleted successfully");
+                                    loadPhysios();
+                                    clearForm();
+                                    disableForm(true);
+                                }
+                            });
                 }).exceptionally(ex -> {
                     Platform.runLater(() ->
                             MessageUtils.showError("Error", "Delete failed: " + ex.getMessage()));
@@ -309,7 +284,7 @@ public class PhysioViewController {
             return false;
         }
 
-        String email = txtEmail.getText().trim();
+        String email = txtEmail.getText() == null ? "" : txtEmail.getText().trim() ;
         if (email.isEmpty()) {
             MessageUtils.showError("Validation Error", "Email is required");
             return false;
@@ -322,5 +297,33 @@ public class PhysioViewController {
         }
 
         return true;
+    }
+
+    public enum Specialty {
+        SPORTS("Sports"),
+        NEUROLOGICAL("Neurological"),
+        PEDIATRIC("Pediatric"),
+        GERIATRIC("Geriatric"),
+        ONCOLOGICAL("Oncological");
+
+        private final String displayName;
+
+        Specialty(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public static Specialty fromString(String text) {
+            for (Specialty s : Specialty.values()) {
+                if (s.displayName.equalsIgnoreCase(text)) {
+                    return s;
+                }
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
     }
 }

@@ -13,8 +13,22 @@ import java.util.zip.GZIPInputStream;
 
 public class ServiceUtils {
     private static String token = null;
+    private static String rol = null;
+    private static String id = null;
+    private static String login = null;
     public static final String SERVER = "http://bellon.shop:8080";
-    //public static final String SERVER = "http://localhost:8080";
+
+    public static String getRol() {
+        return rol;
+    }
+
+    public static String getId() {
+        return id;
+    }
+
+    public static String getLogin() {
+        return login;
+    }
 
     public static void setToken(String token) {
         ServiceUtils.token = token;
@@ -33,6 +47,11 @@ public class ServiceUtils {
             AuthResponse authResponse = new Gson().fromJson(jsonResponse, AuthResponse.class);
             if (authResponse != null && authResponse.isOk()) {
                 setToken(authResponse.getToken());
+                ServiceUtils.rol = authResponse.getRol();
+                ServiceUtils.login = authResponse.getLogin();
+                if(authResponse.getId() != null){
+                    ServiceUtils.id = authResponse.getId();
+                }
                 return true;
             }
         } catch (Exception e) {

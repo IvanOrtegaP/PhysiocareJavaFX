@@ -1,6 +1,8 @@
 package com.example.physiocare.models.physio;
 
-public class PhysioResponse {
+import com.example.physiocare.models.BaseResponse;
+
+public class PhysioResponse extends BaseResponse {
     private Physio result;
 
     public Physio getResult() {

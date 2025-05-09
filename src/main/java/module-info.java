@@ -10,6 +10,7 @@ module com.example.physiocare {
     opens com.example.physiocare.models.auth to com.google.gson;
     opens com.example.physiocare.models.physio to javafx.base, com.google.gson;
     opens com.example.physiocare to javafx.fxml;
+    opens com.example.physiocare.controller to javafx.fxml;
     opens com.example.physiocare.models;
     opens com.example.physiocare.utils;
     exports com.example.physiocare;

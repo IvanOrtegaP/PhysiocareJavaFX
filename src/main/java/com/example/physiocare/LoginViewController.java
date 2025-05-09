@@ -13,6 +13,7 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class LoginViewController {
     @FXML
@@ -37,9 +38,15 @@ public class LoginViewController {
                     if (success) {
                         Platform.runLater(() -> {
                             try {
-                                loadMainView();
+                                System.out.println(ServiceUtils.getRol().equals("admin"));
+                                if(ServiceUtils.getRol()!= null && ServiceUtils.getRol().equals("admin")){
+                                    loadAdminView();
+                                }
+//                                loadMainView();
+
                             } catch (IOException e) {
                                 MessageUtils.showError("Error", "Failed to load application");
+                                e.printStackTrace();
                             }
                         });
                     } else {
@@ -57,6 +64,14 @@ public class LoginViewController {
     private void loadMainView() throws IOException {
         Stage stage = (Stage) txtUsername.getScene().getWindow();
         Parent root = FXMLLoader.load(getClass().getResource("main-view.fxml"));
+        stage.setScene(new Scene(root));
+        stage.setTitle("PhysioCare - Main Menu");
+        stage.show();
+    }
+
+    private void loadAdminView() throws IOException {
+        Stage stage = (Stage) txtUsername.getScene().getWindow();
+        Parent root = FXMLLoader.load(getClass().getResource("patients/PatientsView.fxml"));
         stage.setScene(new Scene(root));
         stage.setTitle("PhysioCare - Main Menu");
         stage.show();

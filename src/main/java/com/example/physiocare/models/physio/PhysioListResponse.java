@@ -1,19 +1,18 @@
 package com.example.physiocare.models.physio;
 
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.patient.Patient;
 
-public class PhysioListResponse {
-    private Physio[] result;
+import java.util.List;
 
-    public PhysioListResponse() {
+public class PhysioListResponse extends BaseResponse {
+    private List<Physio> result;
 
-    }
-
-    public Physio[] getResult() {
+    public List<Physio> getResult() {
         return result;
     }
 
-    public void setResult(Physio[] result) {
+    public void setResult(List<Physio> result) {
         this.result = result;
     }
 }
