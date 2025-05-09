@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PatientsViewController" style="-fx-background-color: #f9f9f9;">
+<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PhysiosViewController" style="-fx-background-color: #f9f9f9;">
 
     <top>
         <VBox>
@@ -22,7 +22,7 @@
                 </padding>
             </HBox>
 
-            <Label text="Patients" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" BorderPane.alignment="CENTER">
+            <Label text="Physios" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" BorderPane.alignment="CENTER">
                 <padding>
                     <Insets top="15" bottom="10" left="15" right="15"/>
                 </padding>
@@ -35,16 +35,17 @@
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <TextField fx:id="txtSearch" promptText="Search by surname..." style="-fx-pref-width: 250;" />
                 <Button fx:id="btnRefresh" onAction="#handleRefresh" text="Refresh" styleClass="action-button"/>
-                <Button fx:id="btnAdd" onAction="#handleAddPatient" text="Add" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5;"/>
-                <Button fx:id="btnEdit" onAction="#handleEditPatient" text="Edit" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5;"/>
-                <Button fx:id="btnDelete" onAction="#handleDeletePatient" text="Delete" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                <Button fx:id="btnAdd" onAction="#handleAddPhysio" text="Add" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                <Button fx:id="btnEdit" onAction="#handleEditPhysio" text="Edit" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                <Button fx:id="btnDelete" onAction="#handleDeletePhysio" text="Delete" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-background-radius: 5;"/>
             </HBox>
 
-            <TableView fx:id="tblPatients" style="-fx-border-color: #ddd; -fx-border-radius: 5;">
+            <TableView fx:id="tblPhysios" style="-fx-border-color: #ddd; -fx-border-radius: 5;">
                 <columns>
                     <TableColumn fx:id="colName" prefWidth="150" text="Name" />
                     <TableColumn fx:id="colSurname" prefWidth="150" text="Surname" />
-                    <TableColumn fx:id="colBirthDate" prefWidth="120" text="Birth Date" />
+                    <TableColumn fx:id="colSpecialty" prefWidth="150" text="Specialty" />
+                    <TableColumn fx:id="colLicenseNumber" prefWidth="120" text="License Number" />
                     <TableColumn fx:id="colEmail" prefWidth="200" text="Email" />
                 </columns>
             </TableView>
