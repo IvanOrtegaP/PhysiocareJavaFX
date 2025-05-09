@@ -2,22 +2,24 @@ package com.example.physiocare.models.patient;
 import com.google.gson.annotations.SerializedName;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 public class Patient {
     @SerializedName("_id")
     private String id;
     private String name;
     private String surname;
-    private java.time.LocalDate birthDate;
+    private Date bitrthDate;
+
     private String address;
     private String insuranceNumber;
     private String email;
 
-    public Patient(String id, String name, String surname, LocalDate birthDate, String address, String insuranceNumber, String email) {
+    public Patient(String id, String name, String surname, Date bitrthDate, String address, String insuranceNumber, String email) {
         this.id = id;
         this.name = name;
         this.surname = surname;
-        this.birthDate = birthDate;
+        this.bitrthDate = bitrthDate;
         this.address = address;
         this.insuranceNumber = insuranceNumber;
         this.email = email;
@@ -47,12 +49,12 @@ public class Patient {
         this.surname = surname;
     }
 
-    public LocalDate getBirthDate() {
-        return birthDate;
+    public Date getBirthDate() {
+        return bitrthDate;
     }
 
-    public void setBirthDate(LocalDate birthDate) {
-        this.birthDate = birthDate;
+    public void setBirthDate(Date bitrthDate) {
+        this.bitrthDate = bitrthDate;
     }
 
     public String getAddress() {

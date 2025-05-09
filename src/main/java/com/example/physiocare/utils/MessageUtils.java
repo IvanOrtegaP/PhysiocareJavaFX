@@ -19,4 +19,12 @@ public class MessageUtils
         info.setContentText(message);
         info.showAndWait();
     }
+
+    public static Alert showConfirmation(String header, String message, String title){
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(message);
+        return  alert;
+    }
 }

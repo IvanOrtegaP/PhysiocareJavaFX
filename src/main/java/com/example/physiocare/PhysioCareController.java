@@ -17,9 +17,12 @@ import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ServiceUtils;
 
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 public class PhysioCareController implements Initializable {
@@ -127,13 +130,13 @@ public class PhysioCareController implements Initializable {
                     return gson.fromJson(json, PatientListResponse.class);
                 })
                 .thenAccept(response -> {
-                    if (response != null && !response.isError()) {
-                        int patientCount = response.getPatients() != null ? response.getPatients().length : 0;
+                    if (response != null && response.isOk()) {
+                        int patientCount = response.getPatients() != null ? response.getPatients().size() : 0;
                         System.out.println("Successfully loaded " + patientCount + " patients");
 
                         Platform.runLater(() -> {
                             if (response.getPatients() != null) {
-                                lsPatients.getItems().setAll(Arrays.asList(response.getPatients()));
+                                lsPatients.getItems().setAll(response.getPatients());
                             } else {
                                 lsPatients.getItems().clear();
                             }
@@ -173,12 +176,14 @@ public class PhysioCareController implements Initializable {
         }
     }
 
-    private Patient createPatientFromFields() throws DateTimeParseException {
+    private Patient createPatientFromFields() throws  ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
         return new Patient(
                 null,
                 txtName.getText().trim(),
                 txtSurname.getText().trim(),
-                LocalDate.parse(txtBirthDate.getText().trim()),
+                sdf.parse(txtBirthDate.getText().trim()),
                 txtAddress.getText().trim(),
                 txtInsuranceNumber.getText().trim(),
                 txtEmail.getText().trim()
@@ -214,7 +219,7 @@ public class PhysioCareController implements Initializable {
                 .thenAccept(response -> {
                     Platform.runLater(() -> {
                         btPost.setDisable(false);
-                        if (!response.isError()) {
+                        if (response.isOk()) {
                             System.out.println("Patient created successfully: " + response.getPatient().getId());
                             MessageUtils.showMessage("Success",
                                     "Patient created: " + response.getPatient().getName());
@@ -261,10 +266,11 @@ public class PhysioCareController implements Initializable {
         }
     }
 
-    private void updatePatientFromFields(Patient patient) throws DateTimeParseException {
+    private void updatePatientFromFields(Patient patient) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         patient.setName(txtName.getText().trim());
         patient.setSurname(txtSurname.getText().trim());
-        patient.setBirthDate(LocalDate.parse(txtBirthDate.getText().trim()));
+        patient.setBirthDate(sdf.parse(txtBirthDate.getText().trim()));
         patient.setAddress(txtAddress.getText().trim());
         patient.setInsuranceNumber(txtInsuranceNumber.getText().trim());
         patient.setEmail(txtEmail.getText().trim());
@@ -285,7 +291,7 @@ public class PhysioCareController implements Initializable {
                 .thenAccept(response -> {
                     Platform.runLater(() -> {
                         btPut.setDisable(false);
-                        if (!response.isError()) {
+                        if (response.isOk()) {
                             System.out.println("Patient updated successfully");
                             MessageUtils.showMessage("Success",
                                     "Patient updated: " + response.getPatient().getName());
@@ -333,7 +339,7 @@ public class PhysioCareController implements Initializable {
                 .thenAccept(response -> {
                     Platform.runLater(() -> {
                         btDelete.setDisable(false);
-                        if (!response.isError()) {
+                        if (response.isOk()) {
                             System.out.println("Patient deleted successfully");
                             MessageUtils.showMessage("Success",
                                     "Patient deleted: " + response.getPatient().getName());

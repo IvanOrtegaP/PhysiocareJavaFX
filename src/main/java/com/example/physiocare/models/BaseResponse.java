@@ -12,7 +12,4 @@ public class BaseResponse {
         return ok;
     }
 
-    public boolean isError() {
-        return !ok;
-    }
 }

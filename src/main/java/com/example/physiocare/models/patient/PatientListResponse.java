@@ -2,14 +2,16 @@ package com.example.physiocare.models.patient;
 
 import com.example.physiocare.models.BaseResponse;
 
-public class PatientListResponse extends BaseResponse {
-    private Patient[] result;
+import java.util.List;
 
-    public Patient[] getPatients() {
+public class PatientListResponse extends BaseResponse {
+    private List<Patient> result;
+
+    public List<Patient> getPatients() {
         return result;
     }
 
-    public void setResult(Patient[] result) {
+    public void setResult(List<Patient> result) {
         this.result = result;
     }
 }

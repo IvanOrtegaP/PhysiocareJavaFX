@@ -5,7 +5,7 @@ import com.example.physiocare.models.patient.PatientListResponse;
 import com.example.physiocare.models.patient.PatientResponse;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ServiceUtils;
-import com.google.gson.*;
+import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,47 +13,46 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.lang.reflect.Type;
+import java.time.ZoneId;
+import java.util.Date;
 
 public class PatientViewController {
-    @FXML private TextField txtName;
-    @FXML private TextField txtSurname;
-    @FXML private DatePicker dpBirthDate;
-    @FXML private TextField txtAddress;
-    @FXML private TextField txtInsuranceNumber;
-    @FXML private TextField txtEmail;
-    @FXML private TableView<Patient> tblPatients;
-    @FXML private TableColumn<Patient, String> colName;
-    @FXML private TableColumn<Patient, String> colSurname;
-    @FXML private TableColumn<Patient, String> colInsurance;
-    @FXML private TableColumn<Patient, String> colEmail;
-    @FXML private Button btnNew;
-    @FXML private Button btnSave;
-    @FXML private Button btnDelete;
-    @FXML private Label lblMessage;
-    @FXML private Button btnRefresh;
-    @FXML private TextField txtSearch;
-
-    private ObservableList<Patient> patients = FXCollections.observableArrayList();
-
-    private static class LocalDateAdapter implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate> {
-        @Override
-        public JsonElement serialize(LocalDate date, Type typeOfSrc, JsonSerializationContext context) {
-            return new JsonPrimitive(date.toString());
-        }
-
-        @Override
-        public LocalDate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-            String dateStr = json.getAsString();
-            return LocalDate.parse(dateStr.substring(0, 10));
-        }
-    }
-
-
+    private final Gson gson = new Gson();
+    private final ObservableList<Patient> patients = FXCollections.observableArrayList();
+    @FXML
+    private TextField txtName;
+    @FXML
+    private TextField txtSurname;
+    @FXML
+    private DatePicker dpBirthDate;
+    @FXML
+    private TextField txtAddress;
+    @FXML
+    private TextField txtInsuranceNumber;
+    @FXML
+    private TextField txtEmail;
+    @FXML
+    private TableView<Patient> tblPatients;
+    @FXML
+    private TableColumn<Patient, String> colName;
+    @FXML
+    private TableColumn<Patient, String> colSurname;
+    @FXML
+    private TableColumn<Patient, String> colInsurance;
+    @FXML
+    private TableColumn<Patient, String> colEmail;
+    @FXML
+    private Button btnNew;
+    @FXML
+    private Button btnSave;
+    @FXML
+    private Button btnDelete;
+    @FXML
+    private Label lblMessage;
+    @FXML
+    private Button btnRefresh;
+    @FXML
+    private TextField txtSearch;
     private Patient currentPatient = null;
 
     @FXML
@@ -86,45 +85,30 @@ public class PatientViewController {
     }
 
     private void loadPatients(String searchQuery) {
-        CompletableFuture.supplyAsync(() -> {
-            String url = ServiceUtils.SERVER + (searchQuery != null && !searchQuery.isEmpty()
-                    ? "/patients/find?surname=" + searchQuery
-                    : "/patients");
 
-            String response = ServiceUtils.getResponse(url, null, "GET");
-            System.out.println("DEBUG - Respuesta JSON: " + response);
+        String url = ServiceUtils.SERVER + (searchQuery != null && !searchQuery.isEmpty()
+                ? "/patients/find?surname=" + searchQuery
+                : "/patients");
 
-            if (response == null || response.trim().isEmpty()) {
-                System.out.println("La respuesta del servidor está vacía");
-                return null;
-            }
+//        System.out.println("DEBUG - Respuesta JSON: " + response);
 
-            Gson gson = new GsonBuilder()
-                    .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
-                    .create();
-
-            try {
-                Patient[] patientArray = gson.fromJson(response, Patient[].class);
-                return patientArray;
-            } catch (JsonSyntaxException e) {
-                System.out.println("Error al parsear la respuesta: " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-        }).thenAccept(patientArray -> {
+        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
+                PatientListResponse.class)).thenAccept(response -> {
             Platform.runLater(() -> {
-                if (patientArray != null && patientArray.length > 0) {
-                    patients.setAll(Arrays.asList(patientArray));
-                    clearSelection();
-                } else {
+                if (response == null || !response.isOk()) {
                     System.out.println("No se encontraron pacientes o hubo un error");
                     patients.clear();
                     MessageUtils.showError("Error", "The patient list could not be loaded or no results were found");
+                } else {
+                    patients.setAll(response.getPatients());
+                    clearSelection();
                 }
             });
+        }).exceptionally(ex -> {
+            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+            return null;
         });
     }
-
 
     @FXML
     private void handleNew() {
@@ -144,11 +128,13 @@ public class PatientViewController {
     private void handleSave() {
         if (!validateForm()) return;
 
+        Date date = Date.from(dpBirthDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
         Patient patient = new Patient(
                 currentPatient != null ? currentPatient.getId() : null,
                 txtName.getText().trim(),
                 txtSurname.getText().trim(),
-                dpBirthDate.getValue(),
+                date,
                 txtAddress.getText().trim(),
                 txtInsuranceNumber.getText().trim(),
                 txtEmail.getText().trim()
@@ -159,19 +145,13 @@ public class PatientViewController {
                 ? ServiceUtils.SERVER + "/patients"
                 : ServiceUtils.SERVER + "/patients/" + currentPatient.getId();
 
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(LocalDate.class, new LocalDateAdapter())
-                .create();
 
         String jsonRequest = gson.toJson(patient);
 
-        CompletableFuture.supplyAsync(() -> {
-            String response = ServiceUtils.getResponse(url, jsonRequest, method);
-            return gson.fromJson(response, PatientResponse.class);
-        }).thenAccept(response -> {
+        ServiceUtils.getResponseAsync(url, jsonRequest, method).thenApply(json -> gson.fromJson(json,
+                PatientResponse.class)).thenAccept(response -> {
             Platform.runLater(() -> {
-                //TODO Arreglar este if
-                if (response != null && !response.isError()) {
+                if (response != null && response.isOk()) {
                     MessageUtils.showMessage("Success",
                             "Patient " + (currentPatient == null ? "created" : "updated") + " successfully");
                     loadPatients();
@@ -181,53 +161,47 @@ public class PatientViewController {
                     disableForm(true);
                 }
             });
+        }).exceptionally(ex -> {
+            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+            return null;
         });
     }
-
-
-
-
 
     @FXML
     private void handleDelete() {
         if (currentPatient == null) return;
+        String message = "Are you sure you want to delete " + currentPatient.getName() + "?";
+        MessageUtils.showConfirmation("Delete Patient", message, "Delete patient").showAndWait()
+                .ifPresent(response -> {
+                    if (response == ButtonType.OK) {
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Delete");
-        alert.setHeaderText("Delete Patient");
-        alert.setContentText("Are you sure you want to delete " + currentPatient.getName() + "?");
+                        String url = ServiceUtils.SERVER + "/patients/" + currentPatient.getId();
 
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                String url = ServiceUtils.SERVER + "/patients/" + currentPatient.getId();
-
-                CompletableFuture.supplyAsync(() -> {
-                    String responseJson = ServiceUtils.getResponse(url, null, "DELETE");
-                    return new Gson().fromJson(responseJson, PatientResponse.class);
-                }).thenAccept(apiResponse -> {
-                    Platform.runLater(() -> {
-                        //TODO Arreglar este if
-                        if (apiResponse != null && !apiResponse.isError()) {
-                            MessageUtils.showMessage("Success", "Patient deleted successfully");
-                            loadPatients();
-                            clearForm();
-                            disableForm(true);
-                        } else {
-                            loadPatients();
-                            clearForm();
-                            disableForm(true);
-                        }
-                    });
+                        ServiceUtils.getResponseAsync(url, null, "DELETE").thenApply(json -> gson.fromJson(json,
+                                PatientResponse.class)).thenAccept(responseApi -> {
+                            Platform.runLater(() -> {
+                                if (responseApi != null && responseApi.isOk()) {
+                                    MessageUtils.showMessage("Success", "Patient deleted successfully");
+                                    loadPatients();
+                                    clearForm();
+                                    disableForm(true);
+                                } else {
+                                    loadPatients();
+                                    clearForm();
+                                    disableForm(true);
+                                }
+                            });
+                        });
+                    }
                 });
-            }
-        });
         loadPatients();
     }
 
     private void populateForm(Patient patient) {
+        System.out.println(patient.getBirthDate());
         txtName.setText(patient.getName());
         txtSurname.setText(patient.getSurname());
-        dpBirthDate.setValue(patient.getBirthDate());
+        dpBirthDate.setValue(patient.getBirthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         txtAddress.setText(patient.getAddress());
         txtInsuranceNumber.setText(patient.getInsuranceNumber());
         txtEmail.setText(patient.getEmail());
