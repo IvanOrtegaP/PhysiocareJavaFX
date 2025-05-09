@@ -1,5 +1,7 @@
 package com.example.physiocare;
 
+import com.example.physiocare.utils.MessageUtils;
+import com.example.physiocare.utils.ServiceUtils;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -9,15 +11,16 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import com.example.physiocare.utils.ServiceUtils;
-import com.example.physiocare.utils.MessageUtils;
 
 import java.io.IOException;
 
 public class LoginViewController {
-    @FXML private TextField txtUsername;
-    @FXML private PasswordField txtPassword;
-    @FXML private Label lblMessage;
+    @FXML
+    private TextField txtUsername;
+    @FXML
+    private PasswordField txtPassword;
+    @FXML
+    private Label lblMessage;
 
     @FXML
     private void handleLogin() {

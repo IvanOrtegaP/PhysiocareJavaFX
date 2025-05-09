@@ -1,11 +1,11 @@
 package com.example.physiocare.models.auth;
 
 public class LoginRequest {
-    String login;
+    String usuario;
     String password;
 
-    public LoginRequest(String login, String password) {
-        this.login = login;
+    public LoginRequest(String usuario, String password) {
+        this.usuario = usuario;
         this.password = password;
     }
 }
