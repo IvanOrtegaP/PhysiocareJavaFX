@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ButtonType?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+
+<DialogPane prefHeight="453.0" prefWidth="682.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controller.AppointmentEditController">
+
+    <header>
+        <Label style="-fx-font-weight: bold; -fx-font-size: 16;" text="APPOINTMENT INFORMATION">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+         <padding>
+            <Insets left="20.0" />
+         </padding></Label>
+    </header>
+
+    <content>
+        <VBox prefHeight="410.0" prefWidth="682.0" spacing="20" style="-fx-padding: 20;">
+
+            <VBox prefHeight="278.0" prefWidth="642.0" spacing="10" style="-fx-border-color: #ccc; -fx-border-width: 1; -fx-border-radius: 5; -fx-padding: 15;">
+                <GridPane hgap="10" vgap="10">
+                    <Label text="Date:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <DatePicker fx:id="dpDate" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                    <Label text="Time:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <ComboBox fx:id="cbTime" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                    <Label text="Physio:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <ComboBox fx:id="cbPhysio" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                    <Label text="Diagnosis:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <TextArea fx:id="taDiagnosis" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                    <Label text="Treatment:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                    <TextArea fx:id="taTreatment" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                    <Label text="Observations:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                    <TextArea fx:id="taObservations" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                    <columnConstraints>
+                        <ColumnConstraints halignment="RIGHT" maxWidth="114.39996337890625" minWidth="68.79998779296875" prefWidth="84.79998779296875" />
+                        <ColumnConstraints hgrow="ALWAYS" maxWidth="529.6000122070312" minWidth="250.0" prefWidth="513.6000122070312" />
+                    </columnConstraints>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+                </GridPane>
+            </VBox>
+        </VBox>
+    </content>
+
+    <buttonTypes>
+        <ButtonType fx:id="btnClose" buttonData="CANCEL_CLOSE" text="Close" />
+        <ButtonType fx:id="btnDelete" buttonData="OTHER" text="Delete" />
+        <ButtonType fx:id="btnSave" buttonData="APPLY" text="Save" />
+    </buttonTypes>
+</DialogPane>
