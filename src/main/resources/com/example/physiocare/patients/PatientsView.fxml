@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="573.0" prefWidth="663.0" style="-fx-background-color: #f9f9f9;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PatientsViewController">
+<BorderPane style="-fx-background-color: #f9f9f9;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PatientsViewController">
 
     <top>
         <VBox>
@@ -20,6 +20,7 @@
                 <Button onAction="#handleViewPhysios" styleClass="nav-button" text="View Physios" />
                 <Button onAction="#handleViewPatients" styleClass="nav-button" text="View Patients" />
                 <Button onAction="#handleViewProfile" styleClass="nav-button" text="View Profile" />
+                <Button onAction="#handleConfirmAppointments" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;" text="Confirm Pending Appointments" />
                 <Region HBox.hgrow="ALWAYS" />
                 <Button onAction="#handleLogout" style="-fx-text-fill: white; -fx-background-color: #e74c3c;" text="Logout" />
                 <padding>
@@ -49,8 +50,8 @@
                 <columns>
                     <TableColumn fx:id="colName" prefWidth="150" text="Name" />
                     <TableColumn fx:id="colSurname" prefWidth="150" text="Surname" />
-                    <TableColumn fx:id="colBirthDate" prefWidth="142.0" text="Birth Date" />
-                    <TableColumn fx:id="colEmail" prefWidth="187.33343505859375" text="Email" />
+                    <TableColumn fx:id="colInsuranceNumber" prefWidth="120" text="Insurance Number" />
+                    <TableColumn fx:id="colEmail" prefWidth="200" text="Email" />
                 </columns>
             </TableView>
         </VBox>

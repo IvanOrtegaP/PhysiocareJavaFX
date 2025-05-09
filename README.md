@@ -1,1 +1,1 @@
-Esto es el proyecto fina de psp inttermodular
+Esto es el proyecto final de psp intermodular

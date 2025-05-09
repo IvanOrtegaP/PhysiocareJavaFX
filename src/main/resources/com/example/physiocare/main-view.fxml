@@ -1,23 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.MainController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
+<VBox alignment="TOP_CENTER" spacing="20" style="-fx-background-color: #f4f4f4; -fx-padding: 30;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.MainController">
 
-    <Label text="PhysioCare Main Menu" textFill="#5119df">
+    <!-- LOGO PLACEHOLDER TODO -->
+    <VBox alignment="CENTER">
+        <Rectangle arcHeight="20" arcWidth="20" fill="#dddddd" height="100" stroke="#cccccc" strokeWidth="1" width="100" />
+        <Label style="-fx-text-fill: #888888;" text="YOUR LOGO HERE" />
+        <!--
+        <ImageView fx:id="logoImageView" fitHeight="100" fitWidth="100"/>
+        -->
+    </VBox>
+
+    <Label text="PhysioCare Dashboard" textFill="#5119df">
         <font>
-            <Font size="24.0" />
+            <Font size="28" />
         </font>
     </Label>
 
-    <Button fx:id="btnPatients" onAction="#handlePatients" prefWidth="200" text="Manage Patients" />
-    <Button fx:id="btnPhysios" onAction="#handlePhysios" prefWidth="200" text="Manage Physiotherapists" />
-    <Button fx:id="btnLogout" onAction="#handleLogout" prefWidth="200" text="Logout" />
+    <VBox alignment="CENTER" spacing="10">
+        <Button fx:id="btnPatients" onAction="#handlePatients" prefWidth="220" style="-fx-font-size: 14;" text="Manage Patients" />
+
+        <!-- ADMIN Y PHYSIO -->
+        <Button fx:id="btnAppointments" onAction="#handleAppointments" prefWidth="220" style="-fx-font-size: 14;" text="View Pending Appointments" />
+
+        <!-- SOLO ADMIN -->
+        <Button fx:id="btnPhysios" onAction="#handlePhysios" prefWidth="220" style="-fx-font-size: 14;" text="Manage Physiotherapists" visible="false" />
+
+        <Button fx:id="btnLogout" onAction="#handleLogout" prefWidth="220" style="-fx-font-size: 14; -fx-text-fill: red;" text="Logout" />
+    </VBox>
+
 </VBox>

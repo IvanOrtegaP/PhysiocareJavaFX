@@ -5,24 +5,41 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.LoginViewController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
+<HBox prefHeight="400" prefWidth="700" style="-fx-background-color: white;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.LoginViewController">
 
-    <Label text="PhysioCare Login" textFill="#5119df">
-        <font>
-            <Font size="24.0" />
-        </font>
-    </Label>
+    <VBox alignment="CENTER" prefWidth="350" spacing="20" style="-fx-background-color: #f5f5f5;">
+        <padding>
+            <Insets bottom="20" left="30" right="30" top="40" />
+        </padding>
 
-    <TextField fx:id="txtUsername" promptText="Username" />
-    <PasswordField fx:id="txtPassword" promptText="Password" />
+        <ImageView fx:id="imgLogo" fitHeight="102.0" fitWidth="222.0" preserveRatio="true">
+         <image>
+            <Image url="@images/Your-Logo-here.png" />
+         </image></ImageView>
+        <Label style="-fx-font-size: 18; -fx-text-fill: #5119df; -fx-font-weight: bold;" text="Welcome to PhysioCare" />
+        <Label style="-fx-text-fill: #666666;" text="Log in to PhysioCare to access a complete suite of tools designed to help you." textAlignment="CENTER" wrapText="true" />
+    </VBox>
 
-    <Button fx:id="btnLogin" defaultButton="true" onAction="#handleLogin" text="Login" />
+    <Pane prefWidth="4.0" style="-fx-background-color: #cccccc;" />
 
-    <Label fx:id="lblMessage" textFill="RED" />
-</VBox>
+    <VBox alignment="CENTER" prefWidth="350" spacing="20">
+        <padding>
+            <Insets bottom="30" left="40" right="40" top="50" />
+        </padding>
+
+        <Label style="-fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: #333;" text="Login to your account" />
+
+        <TextField fx:id="txtUsername" promptText="Username" />
+        <PasswordField fx:id="txtPassword" promptText="Password" />
+
+        <Button fx:id="btnLogin" defaultButton="true" onAction="#handleLogin" style="-fx-background-color: #5119df; -fx-text-fill: white; -fx-font-weight: bold;" text="Login" />
+
+        <Label fx:id="lblMessage" textFill="RED" />
+    </VBox>
+</HBox>
