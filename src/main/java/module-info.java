@@ -9,10 +9,17 @@ module com.example.physiocare {
 
     opens com.example.physiocare.models.auth to com.google.gson;
     opens com.example.physiocare.models.physio to javafx.base, com.google.gson;
+    //Controladores con las vistas donde estan
     opens com.example.physiocare to javafx.fxml;
-    opens com.example.physiocare.controller to javafx.fxml;
+    opens com.example.physiocare.controller.patients to javafx.fxml;
+    opens com.example.physiocare.controller.physios to javafx.fxml;
+    opens com.example.physiocare.controller.appointments to javafx.fxml;
+
+
     opens com.example.physiocare.models;
+    opens com.example.physiocare.models.patient;
+    opens com.example.physiocare.models.record;
+    opens com.example.physiocare.models.appointment;
     opens com.example.physiocare.utils;
     exports com.example.physiocare;
-    opens com.example.physiocare.models.patient;
 }

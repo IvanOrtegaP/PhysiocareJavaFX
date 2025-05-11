@@ -1,6 +1,7 @@
 package com.example.physiocare;
 
 import com.example.physiocare.utils.MessageUtils;
+import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -38,9 +39,10 @@ public class LoginViewController {
                     if (success) {
                         Platform.runLater(() -> {
                             try {
-                                System.out.println(ServiceUtils.getRol().equals("admin"));
+                                Stage stage = (Stage) txtUsername.getScene().getWindow();
                                 if(ServiceUtils.getRol()!= null && ServiceUtils.getRol().equals("admin")){
-                                    loadAdminView();
+                                    ScreenUtils.loadView(stage , "/com/example/physiocare/patients/PatientsView.fxml" ,
+                                            "PhysioCare - Main Menu"  );
                                 }
 //                                loadMainView();
 
@@ -64,14 +66,6 @@ public class LoginViewController {
     private void loadMainView() throws IOException {
         Stage stage = (Stage) txtUsername.getScene().getWindow();
         Parent root = FXMLLoader.load(getClass().getResource("main-view.fxml"));
-        stage.setScene(new Scene(root));
-        stage.setTitle("PhysioCare - Main Menu");
-        stage.show();
-    }
-
-    private void loadAdminView() throws IOException {
-        Stage stage = (Stage) txtUsername.getScene().getWindow();
-        Parent root = FXMLLoader.load(getClass().getResource("patients/PatientsView.fxml"));
         stage.setScene(new Scene(root));
         stage.setTitle("PhysioCare - Main Menu");
         stage.show();

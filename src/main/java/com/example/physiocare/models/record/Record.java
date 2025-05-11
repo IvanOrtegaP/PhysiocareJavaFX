@@ -1,26 +1,31 @@
 package com.example.physiocare.models.record;
 
-import com.example.physiocare.models.patient.Patient;
+import com.example.physiocare.models.appointment.Appointment;
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Date;
 import java.util.List;
 
 public class Record {
 
     @SerializedName("_id")
     private String id;
-    private Patient patient;
+    private String patient;
     private String medicalRecord;
     private List<Appointment> appointments;
 
-    public Record(Patient patient, String medicalRecord, List<Appointment> appointments) {
+    public Record(){
+
+    }
+
+
+
+    public Record(String patient, String medicalRecord, List<Appointment> appointments) {
         this.patient = patient;
         this.medicalRecord = medicalRecord;
         this.appointments = appointments;
     }
 
-    public Record(String id, Patient patient, String medicalRecord, List<Appointment> appointments) {
+    public Record(String id, String patient, String medicalRecord, List<Appointment> appointments) {
         this.id = id;
         this.patient = patient;
         this.medicalRecord = medicalRecord;
@@ -35,11 +40,11 @@ public class Record {
         this.id = id;
     }
 
-    public Patient getPatient() {
+    public String getPatient() {
         return patient;
     }
 
-    public void setPatient(Patient patient) {
+    public void setPatient(String patient) {
         this.patient = patient;
     }
 
@@ -57,6 +62,16 @@ public class Record {
 
     public void setAppointments(List<Appointment> appointments) {
         this.appointments = appointments;
+    }
+
+    @Override
+    public String toString() {
+        return "Record{" +
+                "id='" + id + '\'' +
+                ", patient='" + patient + '\'' +
+                ", medicalRecord='" + medicalRecord + '\'' +
+                ", appointments=" + appointments +
+                '}';
     }
 }
 

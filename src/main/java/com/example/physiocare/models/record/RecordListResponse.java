@@ -1,13 +1,17 @@
 package com.example.physiocare.models.record;
 
-public class RecordListResponse {
-    private Record[] result;
+import com.example.physiocare.models.BaseResponse;
 
-    public Record[] getResult() {
+import java.util.List;
+
+public class RecordListResponse extends BaseResponse {
+    private List<Record> result;
+
+    public List<Record> getResult() {
         return result;
     }
 
-    public void setResult(Record[] result) {
+    public void setResult(List<Record> result) {
         this.result = result;
     }
 }

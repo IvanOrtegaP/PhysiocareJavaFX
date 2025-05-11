@@ -2,6 +2,7 @@ package com.example.physiocare;
 
 import com.example.physiocare.utils.MessageUtils;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -112,4 +113,6 @@ public class MainController {
     }
 
 
+    public void handleAppointments(ActionEvent actionEvent) {
+    }
 }

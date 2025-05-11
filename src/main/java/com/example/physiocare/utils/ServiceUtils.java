@@ -60,6 +60,13 @@ public class ServiceUtils {
         return false;
     }
 
+    public static void logout(){
+        removeToken();
+        rol = null;
+        login = null;
+        id = null;
+    }
+
     public static String getCharset(String contentType) {
         for (String param : contentType.replace(" ", "").split(";")) {
             if (param.startsWith("charset=")) {

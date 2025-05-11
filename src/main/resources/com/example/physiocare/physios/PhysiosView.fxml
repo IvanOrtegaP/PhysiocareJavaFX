@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PhysiosViewController" style="-fx-background-color: #f9f9f9;">
+<BorderPane xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.physios.PhysiosViewController" style="-fx-background-color: #f9f9f9;">
 
     <top>
         <VBox>

@@ -11,7 +11,8 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane style="-fx-background-color: #f9f9f9;" xmlns="http://javafx.com/javafx/23" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.PatientsViewController">
+<BorderPane style="-fx-background-color: #f9f9f9;" xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.patients.PatientsViewController">
 
     <top>
         <VBox>

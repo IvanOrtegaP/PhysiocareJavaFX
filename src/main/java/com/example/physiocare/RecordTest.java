@@ -1,18 +1,7 @@
 package com.example.physiocare;
 
-import com.example.physiocare.models.record.Appointment;
-import com.example.physiocare.models.record.Record;
-import com.example.physiocare.models.patient.Patient;
-import com.example.physiocare.utils.ServiceUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-
 public class RecordTest {
-
+/*
     public static void main(String[] args) {
         Patient patient = new Patient("6602f4c2f2f43f6f5db4e936", "Carlos", "García", null, "Calle Falsa 123", "A1B2C3D4E", "carlos@correo.com");
 
@@ -44,4 +33,6 @@ public class RecordTest {
 
         System.out.println("Respuesta del servidor:\n" + response);
     }
+
+ */
 }
