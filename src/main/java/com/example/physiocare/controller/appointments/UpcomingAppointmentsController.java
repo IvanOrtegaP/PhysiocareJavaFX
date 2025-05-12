@@ -35,7 +35,6 @@ public class UpcomingAppointmentsController implements Initializable {
     public Button ButtSave;
     public DialogPane dialogPane;
     private Record showRecord;
-
     private Gson gson = new Gson();
 
     @Override

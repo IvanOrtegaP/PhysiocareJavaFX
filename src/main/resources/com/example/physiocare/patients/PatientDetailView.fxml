@@ -90,6 +90,7 @@
                         <Button fx:id="btnClose" onAction="#handleClose" text="Close"/>
                         <Button fx:id="btnEdit" onAction="#handleEdit" text="Edit"/>
                         <Button fx:id="btnDelete" onAction="#handleDelete" text="Delete"/>
+                        <Button fx:id="btnSave" onAction="#handleSave" text="Save"/>
                     </HBox>
                 </VBox>
             </Tab>
@@ -116,7 +117,7 @@
                             <TableColumn fx:id="colDateUpcoming" prefWidth="120" text="Date"/>
                             <TableColumn fx:id="colTimeUpcoming" prefWidth="100" text="Time"/>
                             <TableColumn fx:id="colPhysioNameUpcoming" prefWidth="150" text="Physio Name"/>
-                            <TableColumn fx:id="colReasonUpcoming" prefWidth="250" text="Reason"/>
+<!--                            <TableColumn fx:id="colReasonUpcoming" prefWidth="250" text="Reason"/>-->
                         </columns>
                     </TableView>
                 </VBox>
