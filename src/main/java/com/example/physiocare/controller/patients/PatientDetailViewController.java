@@ -11,6 +11,8 @@ import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -25,9 +27,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class PatientDetailViewController implements Initializable {
     private final Gson gson = new Gson();
@@ -156,36 +160,83 @@ public class PatientDetailViewController implements Initializable {
 
     public void getAppointmentsPatient() {
         String url = ServiceUtils.SERVER + "/records/patient/" + showPatient.getId();
+        System.out.println("Fetching appointments from: " + url);
 
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json, RecordResponse.class)).thenAccept(response -> Platform.runLater(() -> {
+        ServiceUtils.getResponseAsync(url, null, "GET")
+                .thenApply(json -> {
+                    System.out.println("Raw JSON response: " + json);
+                    try {
+                        // First parse as JsonObject to handle the structure properly
+                        JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
 
-            if (response == null || !response.isOk()) {
-                System.out.println("No se encontraron pacientes o hubo un error");
-                MessageUtils.showError("Error", "The patient record not found");
-            } else {
-                Date date = new Date();
-                RecordShowPatient = response.getResult();
-                tblHistory.setItems(FXCollections.observableList(response.getResult().getAppointments()));
-                PopulateTables();
+                        // Then convert to RecordResponse
+                        RecordResponse response = gson.fromJson(json, RecordResponse.class);
 
-            }
-        })).exceptionally(ex -> {
-            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
-            ex.printStackTrace();
-            return null;
-        });
+                        // If appointments is null in the response, initialize empty list
+                        if (response.getResult() != null && response.getResult().getAppointments() == null) {
+                            response.getResult().setAppointments(new ArrayList<>());
+                        }
+
+                        return response;
+                    } catch (Exception e) {
+                        System.err.println("Error parsing JSON: " + e.getMessage());
+                        throw new RuntimeException("Failed to parse patient records", e);
+                    }
+                })
+                .thenAccept(response -> Platform.runLater(() -> {
+                    if (response == null || !response.isOk()) {
+                        System.out.println("No patient records found or error in response");
+                        MessageUtils.showError("Error", "No se encontró el historial del paciente");
+                    } else {
+                        System.out.println("Successfully retrieved patient records");
+                        RecordShowPatient = response.getResult();
+
+                        // Initialize appointments if null
+                        if (RecordShowPatient.getAppointments() == null) {
+                            RecordShowPatient.setAppointments(new ArrayList<>());
+                        }
+
+                        tblHistory.setItems(FXCollections.observableList(RecordShowPatient.getAppointments()));
+                        PopulateTables();
+                    }
+                }))
+                .exceptionally(ex -> {
+                    System.err.println("Exception in getAppointmentsPatient: " + ex.getMessage());
+                    Platform.runLater(() -> {
+                        if (ex.getCause() instanceof JsonSyntaxException) {
+                            MessageUtils.showError("Error de formato", "Los datos del paciente tienen un formato incorrecto");
+                        } else {
+                            MessageUtils.showError("Error", "No se pudo cargar el historial del paciente: " +
+                                    (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()));
+                        }
+                    });
+                    ex.printStackTrace();
+                    return null;
+                });
     }
 
     private void PopulateTables() {
+        if (RecordShowPatient == null || RecordShowPatient.getAppointments() == null) {
+            tblUpcoming.setItems(FXCollections.observableArrayList());
+            tblHistory.setItems(FXCollections.observableArrayList());
+            return;
+        }
+
         Date now = Date.from(LocalDate.now().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
-        List<Appointment> proxAppoinments = RecordShowPatient.getAppointments().stream().filter(appointment -> appointment.getDate().after(now)).toList();
 
-        tblUpcoming.setItems(FXCollections.observableList(proxAppoinments));
+        List<Appointment> upcomingAppointments = RecordShowPatient.getAppointments().stream()
+                .filter(appointment -> appointment != null && appointment.getDate() != null && appointment.getDate().after(now))
+                .collect(Collectors.toList());
 
-        List<Appointment> historyAppoinments = RecordShowPatient.getAppointments().stream().filter(appointment -> appointment.getDate().before(now)).toList();
+        List<Appointment> pastAppointments = RecordShowPatient.getAppointments().stream()
+                .filter(appointment -> appointment != null && appointment.getDate() != null && appointment.getDate().before(now))
+                .collect(Collectors.toList());
 
-        tblHistory.setItems(FXCollections.observableList(historyAppoinments));
+        tblUpcoming.setItems(FXCollections.observableList(upcomingAppointments));
+        tblHistory.setItems(FXCollections.observableList(pastAppointments));
     }
+
+
 
     public void handleDelete(ActionEvent actionEvent) {
         if (showPatient == null) return;
