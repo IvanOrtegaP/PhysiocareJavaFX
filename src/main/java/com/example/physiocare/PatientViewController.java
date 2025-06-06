@@ -198,13 +198,13 @@ public class PatientViewController {
     }
 
     private void populateForm(Patient patient) {
-        System.out.println(patient.getBirthDate());
+        System.out.println(patient.getBitrthDate());
         txtName.setText(patient.getName());
         txtSurname.setText(patient.getSurname());
-        dpBirthDate.setValue(patient.getBirthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        dpBirthDate.setValue(patient.getBitrthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         txtAddress.setText(patient.getAddress());
         txtInsuranceNumber.setText(patient.getInsuranceNumber());
-        txtEmail.setText(patient.getEmail());
+//        txtEmail.setText(patient.getEmail());
     }
 
     private void clearForm() {

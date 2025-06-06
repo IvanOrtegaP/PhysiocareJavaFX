@@ -1,21 +1,21 @@
 package com.example.physiocare.models.patient;
-import com.example.physiocare.models.user.User;
-import com.google.gson.annotations.SerializedName;
 
-import java.time.LocalDate;
+import com.example.physiocare.models.user.User;
+
 import java.util.Date;
 
-public class Patient extends PatientBase {
+public class PatientMoreInfo extends PatientBase {
+
     private Date bitrthDate;
     private String address;
     private String insuranceNumber;
-    private String user;
+    private User user;
 
-    public Patient() {
+    public PatientMoreInfo(){
         super();
     }
 
-    public Patient(String id, String name, String surname, Date bitrthDate, String address, String insuranceNumber, String user) {
+    public PatientMoreInfo(String id, String name, String surname, Date bitrthDate, String address, String insuranceNumber, User user){
         super(id, name, surname);
         this.bitrthDate = bitrthDate;
         this.address = address;
@@ -47,13 +47,11 @@ public class Patient extends PatientBase {
         this.insuranceNumber = insuranceNumber;
     }
 
-
-
-    public String getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(String user) {
+    public void setUser(User user) {
         this.user = user;
     }
 }

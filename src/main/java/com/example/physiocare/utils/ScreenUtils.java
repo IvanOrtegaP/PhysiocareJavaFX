@@ -46,6 +46,7 @@ public class ScreenUtils {
             return  modalStage;
 
         }catch (Exception e){
+            e.printStackTrace();
             MessageUtils.showError("Error to loading view" , e.getLocalizedMessage());
         }
 

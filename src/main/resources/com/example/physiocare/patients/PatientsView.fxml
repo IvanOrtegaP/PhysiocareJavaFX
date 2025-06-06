@@ -42,7 +42,7 @@
                 <TextField fx:id="txtSearch" promptText="Search by surname..." style="-fx-pref-width: 250;" />
 <!--                <Button fx:id="btnRefresh" onAction="#handleRefresh" styleClass="action-button" text="Refresh" />-->
                 <Button fx:id="btnAdd" onAction="#handleAddPatient" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5;" text="Add" />
-                <Button fx:id="btnEdit" onAction="#handleEditPatient" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5;" text="Edit" />
+<!--                <Button fx:id="btnEdit" onAction="#handleEditPatient" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5;" text="Edit" />-->
                 <Button fx:id="btnDelete" onAction="#handleDeletePatient" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-background-radius: 5;" text="Delete" />
             </HBox>
 
@@ -51,7 +51,7 @@
                     <TableColumn fx:id="colName" prefWidth="150" text="Name" />
                     <TableColumn fx:id="colSurname" prefWidth="150" text="Surname" />
                     <TableColumn fx:id="colInsuranceNumber" prefWidth="132.0" text="Insurance Number" />
-                    <TableColumn fx:id="colEmail" prefWidth="188.00009155273438" text="Email" />
+                    <TableColumn fx:id="colBirthDate" prefWidth="188.00009155273438" text="BirthDate" />
                 </columns>
             </TableView>
         </VBox>

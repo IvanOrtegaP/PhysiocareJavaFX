@@ -1,6 +1,7 @@
 package com.example.physiocare.controller.patients;
 
 import com.example.physiocare.models.appointment.AppoinmentListResponse;
+import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.models.patient.PatientListResponse;
 import com.example.physiocare.models.patient.PatientResponse;
@@ -21,6 +22,8 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 public class PatientsViewController implements Initializable {
@@ -38,9 +41,13 @@ public class PatientsViewController implements Initializable {
     public TableColumn<Patient,String> colSurname;
     public TableColumn<Patient,String> colEmail;
     public TableColumn<Patient,String> colInsuranceNumber;
+    public TableColumn<Patient, Date> colBirthDate;
     public Button btnViewPhysios;
     public Button btnViewPatients;
+
     private Patient currentPatient = null;
+    private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
 
     //Mete dilay a la busqueda por texto
     PauseTransition pause = new PauseTransition(Duration.millis(600));
@@ -68,8 +75,9 @@ public class PatientsViewController implements Initializable {
     private void setupTable() {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colSurname.setCellValueFactory(new PropertyValueFactory<>("surname"));
-        colEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
         colInsuranceNumber.setCellValueFactory(new PropertyValueFactory<>("insuranceNumber"));
+        colBirthDate.setCellValueFactory(new PropertyValueFactory<>("bitrthDate"));
+        colBirthDate.setCellFactory(column -> buildDateCell(formatDate));
 
         tblPatients.setItems(patients);
         tblPatients.getSelectionModel().selectedItemProperty().addListener(
@@ -122,6 +130,7 @@ public class PatientsViewController implements Initializable {
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+            ex.printStackTrace();
             return null;
         });
     }
@@ -130,6 +139,16 @@ public class PatientsViewController implements Initializable {
         tblPatients.getSelectionModel().clearSelection();
         currentPatient = null;
         btnDelete.setDisable(true);
+    }
+
+    private TableCell<Patient, Date> buildDateCell(SimpleDateFormat formatter) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(Date item, boolean empty) {
+                super.updateItem(item, empty);
+                setText((empty || item == null) ? null : formatter.format(item));
+            }
+        };
     }
 
 
@@ -162,6 +181,7 @@ public class PatientsViewController implements Initializable {
     }
 
     public void handleAddPatient(ActionEvent actionEvent) {
+
     }
 
     public void handleEditPatient(ActionEvent actionEvent) {
@@ -209,6 +229,8 @@ public class PatientsViewController implements Initializable {
                 patients.clear();
                 MessageUtils.showError("Error", "The patient list could not be loaded or no results were found");
             } else {
+                ScreenUtils.loadViewModal("/com/example/physiocare/appointment/ConfirmAppointmentView.fxml" ,
+                        "PhysioCare - Appointments Confirm");
                 System.out.println(response.getResult().size());
             }
         })).exceptionally(ex -> {

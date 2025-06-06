@@ -19,9 +19,9 @@
 
 <BorderPane fx:id="borderPane" prefHeight="600" prefWidth="800" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.physiocare.controller.patients.PatientDetailViewController">
-
     <center>
-        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE"><!-- PESTAÑA 1: Datos del paciente -->
+        <!-- PESTAÑA 1: Datos del paciente -->
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
             <Tab text="Patient Info">
                 <VBox spacing="20">
                     <padding>
@@ -152,5 +152,4 @@
             </Tab>
         </TabPane>
     </center>
-
 </BorderPane>

@@ -69,7 +69,7 @@ public class PhysioCareController implements Initializable {
         System.out.println("Populating fields for patient: " + patient.getId());
         txtName.setText(patient.getName());
         txtSurname.setText(patient.getSurname());
-        txtBirthDate.setText(patient.getBirthDate().toString());
+        txtBirthDate.setText(patient.getBitrthDate().toString());
         txtAddress.setText(patient.getAddress());
         txtInsuranceNumber.setText(patient.getInsuranceNumber());
     }
@@ -270,10 +270,10 @@ public class PhysioCareController implements Initializable {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         patient.setName(txtName.getText().trim());
         patient.setSurname(txtSurname.getText().trim());
-        patient.setBirthDate(sdf.parse(txtBirthDate.getText().trim()));
+        patient.setBitrthDate(sdf.parse(txtBirthDate.getText().trim()));
         patient.setAddress(txtAddress.getText().trim());
         patient.setInsuranceNumber(txtInsuranceNumber.getText().trim());
-        patient.setEmail(txtEmail.getText().trim());
+//        patient.setEmail(txtEmail.getText().trim());
     }
 
     private void updatePatient(Patient patient) {

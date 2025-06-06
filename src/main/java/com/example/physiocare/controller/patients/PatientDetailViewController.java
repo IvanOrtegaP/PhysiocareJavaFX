@@ -66,6 +66,7 @@ public class PatientDetailViewController implements Initializable {
     public Button btnSave;
     private Patient showPatient;
     private Record RecordShowPatient;
+    private Boolean addPatient;
 
     private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
@@ -74,12 +75,23 @@ public class PatientDetailViewController implements Initializable {
     public void setShowPatient(Patient showPatient) {
         this.showPatient = showPatient;
     }
+    public void setAddPatient(Boolean add) {this.addPatient = add;}
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+
         borderPane.setUserData(this);
-        setupTableHistory();
-        setupTableUpcoming();
+        System.out.println(addPatient);
+        System.out.println(showPatient);
+        if(addPatient){
+            this.tblUpcoming.setDisable(true);
+            this.tblHistory.setDisable(true);
+        }else {
+            setupTableHistory();
+            setupTableUpcoming();
+        }
+
+
         DisableForm(true);
         btnSave.setDisable(true);
         btnSave.setVisible(false);
@@ -100,9 +112,9 @@ public class PatientDetailViewController implements Initializable {
             txtName.setText((showPatient.getName() != null ? showPatient.getName() : "No tiene nombre asignado"));
             txtSurname.setText((showPatient.getSurname() != null ? showPatient.getSurname() : "No tiene apellido asignado"));
             txtAddress.setText((showPatient.getAddress() != null ? showPatient.getAddress() : "No tiene direccion asignada"));
-            txtEmail.setText((showPatient.getEmail() != null ? showPatient.getEmail() : "No tiene email asignado"));
+//            txtEmail.setText((showPatient.getEmail() != null ? showPatient.getEmail() : "No tiene email asignado"));
             txtInsuranceNumber.setText(showPatient.getInsuranceNumber() != null ? showPatient.getInsuranceNumber() : "No tiene insurance number asignado");
-            dpBirthDate.setValue(showPatient.getBirthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+            dpBirthDate.setValue(showPatient.getBitrthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
             getAppointmentsPatient();
         }
