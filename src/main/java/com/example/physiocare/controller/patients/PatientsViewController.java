@@ -103,7 +103,7 @@ public class PatientsViewController implements Initializable {
     private void loadPatients(String searchQuery) {
 
         String url = ServiceUtils.SERVER + (searchQuery != null && !searchQuery.isEmpty()
-                ? "/patients/find?surname=" + searchQuery
+                ? "/patients/find?search=" + searchQuery
                 : "/patients");
 
         ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
