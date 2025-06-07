@@ -1,5 +1,6 @@
 package com.example.physiocare.models.appointment;
 
+import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.models.physio.Physio;
 import com.google.gson.annotations.SerializedName;
 
@@ -14,6 +15,9 @@ public class Appointment {
     private String diagnosis;
     private String treatment;
     private String observations;
+    private String recordId;
+    private Patient patient;
+    private String confirm;
 
     public Appointment(Date date, Physio physio) {
         this.date = date;
@@ -35,6 +39,22 @@ public class Appointment {
         this.diagnosis = diagnosis;
         this.treatment = treatment;
         this.observations = observations;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
     }
 
     public Date getDate() {
@@ -77,4 +97,26 @@ public class Appointment {
         this.observations = observations;
     }
 
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
+    public String getPatientName() {
+        if (patient != null) {
+            return patient.getName() + " " + patient.getSurname();
+        }
+        return "Unknown";
+    }
+
+    public String getConfirm() {
+        return confirm;
+    }
+
+    public void setConfirm(String confirm) {
+        this.confirm = confirm;
+    }
 }

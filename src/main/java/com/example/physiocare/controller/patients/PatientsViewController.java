@@ -6,6 +6,7 @@ import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.models.patient.PatientListResponse;
 import com.example.physiocare.models.patient.PatientResponse;
 import com.example.physiocare.utils.MessageUtils;
+import com.example.physiocare.utils.RoleAwareController;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
@@ -26,7 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ResourceBundle;
 
-public class PatientsViewController implements Initializable {
+public class PatientsViewController implements Initializable, RoleAwareController {
     private final ObservableList<Patient> patients = FXCollections.observableArrayList();
     private final Gson gson = new Gson();
     public Label lblLoggedUser;
@@ -215,21 +216,30 @@ public class PatientsViewController implements Initializable {
     public void handleConfirmAppointments(ActionEvent actionEvent) {
         String url = ServiceUtils.SERVER + "/records/appointments/unconfirmed";
 
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
-                AppoinmentListResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-
-            if (response == null || !response.isOk()) {
-                System.out.println("No se encontraron pacientes o hubo un error");
-                patients.clear();
-                MessageUtils.showError("Error", "The patient list could not be loaded or no results were found");
+        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
+            System.out.println("DEBUG - JSON Response: " + json);
+            return gson.fromJson(json, AppoinmentListResponse.class);
+        }).thenAccept(response -> Platform.runLater(() -> {
+            if (response == null || !response.isOk() || response.getResult() == null || response.getResult().isEmpty()) {
+                System.out.println("No unconfirmed appointments found or an error occurred");
+                MessageUtils.showError("Error", "No unconfirmed appointments found");
             } else {
-                ScreenUtils.loadViewModal("/com/example/physiocare/appointment/ConfirmAppointmentView.fxml" ,
+                ScreenUtils.loadViewModal("/com/example/physiocare/appointment/ConfirmAppointmentView.fxml",
                         "PhysioCare - Appointments Confirm");
-                System.out.println(response.getResult().size());
+                System.out.println("Appointments loaded: " + response.getResult().size());
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+            ex.printStackTrace();
             return null;
         });
+    }
+
+    @Override
+    public void setRole(String role) {
+        if ("physio".equals(role)) {
+            btnViewPhysios.setVisible(false);
+            btnViewPhysios.setManaged(false);
+        }
     }
 }
