@@ -2,14 +2,17 @@ package com.example.physiocare.controller.patients;
 
 import com.example.physiocare.controller.appointments.UpcomingAppointmentsController;
 import com.example.physiocare.models.appointment.Appointment;
-import com.example.physiocare.models.patient.Patient;
+import com.example.physiocare.models.patient.PatientMoreInfo;
+import com.example.physiocare.models.patient.PatientMoreInfoResponse;
 import com.example.physiocare.models.patient.PatientResponse;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.record.Record;
 import com.example.physiocare.models.record.RecordResponse;
+import com.example.physiocare.models.user.User;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
+import com.example.physiocare.utils.ValidateUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -31,10 +34,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PatientDetailViewController implements Initializable {
     private final Gson gson = new Gson();
+    private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
+    private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
     public TextField txtName;
     public TextField txtSurname;
     public DatePicker dpBirthDate;
@@ -60,26 +66,25 @@ public class PatientDetailViewController implements Initializable {
     public Button btnEditHistory;
     public Button btnDeleteHistory;
     public TableView<Appointment> tblHistory;
-    public TableColumn<Appointment , Date> colDateHistory;
-    public TableColumn<Appointment,Date> colTimeHistory;
+    public TableColumn<Appointment, Date> colDateHistory;
+    public TableColumn<Appointment, Date> colTimeHistory;
     public TableColumn colPhysioNameHistory;
     public TableColumn colDiagnosisHistory;
     public TabPane tabPane;
     @FXML
     public BorderPane borderPane;
     public Button btnSave;
-    private Patient showPatient;
     private Record RecordShowPatient;
     private Boolean addPatient;
+    private PatientMoreInfo showPatientMoreInfo;
 
-    private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
-    private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
-
-
-    public void setShowPatient(Patient showPatient) {
-        this.showPatient = showPatient;
+    public void setShowPatientMoreInfo(PatientMoreInfo showPatientMoreInfo) {
+        this.showPatientMoreInfo = showPatientMoreInfo;
     }
-    public void setAddPatient(Boolean add) {this.addPatient = add;}
+
+    public void setAddPatient(Boolean add) {
+        this.addPatient = add;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -92,28 +97,37 @@ public class PatientDetailViewController implements Initializable {
         btnSave.setManaged(false);
     }
 
-    private void DisableForm(Boolean disable){
+    private void DisableForm(Boolean disable) {
         txtName.setDisable(disable);
         txtSurname.setDisable(disable);
         txtAddress.setDisable(disable);
         txtEmail.setDisable(disable);
         txtInsuranceNumber.setDisable(disable);
         dpBirthDate.setDisable(disable);
+        txtUsername.setDisable(disable);
+        pfPassword.setDisable(disable);
     }
 
     /**
      * Funcion importante que se ejecuta despues del inicialize se ejecuata a mano.
      */
     public void postInit() {
-        if (showPatient != null) {
-            txtName.setText((showPatient.getName() != null ? showPatient.getName() : "No tiene nombre asignado"));
-            txtSurname.setText((showPatient.getSurname() != null ? showPatient.getSurname() : "No tiene apellido asignado"));
-            txtAddress.setText((showPatient.getAddress() != null ? showPatient.getAddress() : "No tiene direccion asignada"));
-//            txtEmail.setText((showPatient.getEmail() != null ? showPatient.getEmail() : "No tiene email asignado"));
-            txtInsuranceNumber.setText(showPatient.getInsuranceNumber() != null ? showPatient.getInsuranceNumber() : "No tiene insurance number asignado");
-            dpBirthDate.setValue(showPatient.getBitrthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-
+        System.out.println(showPatientMoreInfo);
+        if (showPatientMoreInfo != null) {
+            populateForm();
             getAppointmentsPatient();
+        }
+    }
+
+    public void populateForm(){
+        if(showPatientMoreInfo != null){
+            txtName.setText((showPatientMoreInfo.getName() != null ? showPatientMoreInfo.getName() : "No tiene nombre asignado"));
+            txtSurname.setText((showPatientMoreInfo.getSurname() != null ? showPatientMoreInfo.getSurname() : "No tiene apellido asignado"));
+            txtAddress.setText((showPatientMoreInfo.getAddress() != null ? showPatientMoreInfo.getAddress() : "No tiene direccion asignada"));
+            txtInsuranceNumber.setText(showPatientMoreInfo.getInsuranceNumber() != null ? showPatientMoreInfo.getInsuranceNumber() : "No tiene insurance number asignado");
+            dpBirthDate.setValue(showPatientMoreInfo.getBitrthDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+            txtUsername.setText(showPatientMoreInfo.getUser().getLogin() != null ? showPatientMoreInfo.getUser().getLogin() : "No tiene nombre de usuario asignado");
+            txtEmail.setText((showPatientMoreInfo.getUser().getLogin() != null ? showPatientMoreInfo.getUser().getEmail() : "No tiene email asignado"));
         }
     }
 
@@ -122,7 +136,7 @@ public class PatientDetailViewController implements Initializable {
         colDiagnosisHistory.setCellValueFactory(new PropertyValueFactory<>("diagnosis"));
 
         colDateHistory.setCellValueFactory(new PropertyValueFactory<>("date"));
-        colDateHistory.setCellFactory(column ->buildDateCell(formatDate));
+        colDateHistory.setCellFactory(column -> buildDateCell(formatDate));
 
         colTimeHistory.setCellValueFactory(new PropertyValueFactory<>("date"));
         colTimeHistory.setCellFactory(column -> buildDateCell(formatTime));
@@ -152,7 +166,7 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void getAppointmentsPatient() {
-        String url = ServiceUtils.SERVER + "/records/patient/" + showPatient.getId();
+        String url = ServiceUtils.SERVER + "/records/patient/" + showPatientMoreInfo.getId();
         System.out.println("Fetching appointments from: " + url);
 
         ServiceUtils.getResponseAsync(url, null, "GET")
@@ -230,11 +244,10 @@ public class PatientDetailViewController implements Initializable {
     }
 
 
-
     public void handleDelete(ActionEvent actionEvent) {
-        if (showPatient == null) return;
+        if (showPatientMoreInfo == null) return;
 
-        String message = "Are you sure you want to delete " + showPatient.getName() + "?";
+        String message = "Are you sure you want to delete " + showPatientMoreInfo.getName() + "?";
         MessageUtils.showConfirmation("Delete Patient", message, "Delete patient").showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
                 DeletePatient();
@@ -245,26 +258,124 @@ public class PatientDetailViewController implements Initializable {
     }
 
     private void DeletePatient() {
-        String url = ServiceUtils.SERVER + "/patients/" + showPatient.getId();
+        String url = ServiceUtils.SERVER + "/patients/" + showPatientMoreInfo.getId();
 
-        ServiceUtils.getResponseAsync(url, null, "DELETE").thenApply(json -> gson.fromJson(json, PatientResponse.class)).thenAccept(responseApi -> Platform.runLater(() -> {
-            if (responseApi != null && responseApi.isOk()) {
-                MessageUtils.showMessage("Success", "Patient deleted successfully");
-            } else {
-                MessageUtils.showError("Error deleting patient", "The patient to be eliminated is not found");
+        ServiceUtils.getResponseAsync(url, null, "DELETE")
+                .thenApply(json -> gson.fromJson(json, PatientResponse.class))
+                .thenAccept(responseApi -> Platform.runLater(() -> {
+                    if (responseApi != null && responseApi.isOk()) {
+                        MessageUtils.showMessage("Success", "Patient deleted successfully");
+                    } else {
+                        MessageUtils.showError("Error deleting patient", "The patient to be eliminated is not found");
+                    }
+                })).exceptionally(ex -> {
+                    Platform.runLater(() -> MessageUtils.showError("Error deleting patient", ex.getLocalizedMessage()));
+                    return null;
+                });
+    }
+
+    private void EditPatient() {
+        if (!validateForm()) return;
+
+        String url = ServiceUtils.SERVER + "/patients/" + showPatientMoreInfo.getId();
+
+        Date date = Date.from(dpBirthDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+        PatientMoreInfo patient = getPatientMoreInfo(date);
+
+        String PatientJson = gson.toJson(patient);
+
+        ServiceUtils.getResponseAsync(url, PatientJson, "PUT").thenApply(json -> {
+            System.out.println("DEBUG- PATIENT PUT JSON : " + json);
+            return gson.fromJson(json, PatientMoreInfoResponse.class);
+        }).thenAccept(resp -> Platform.runLater(() -> {
+            if(resp != null && resp.isOk()){
+                showPatientMoreInfo = resp.getPatient();
+                DisableButtons();
+                populateForm();
+                DisableForm(true);
             }
         })).exceptionally(ex -> {
-            Platform.runLater(() -> MessageUtils.showError("Error deleting patient", ex.getLocalizedMessage()));
             return null;
         });
     }
 
-    public void handleEdit(ActionEvent actionEvent) {
-        DisableForm(false);
-        DisableButtons();
+    private PatientMoreInfo getPatientMoreInfo(Date date) {
+
+        User user = new User(
+                (showPatientMoreInfo.getUser().getId() != null ? showPatientMoreInfo.getUser().getId() : null),
+                txtUsername.getText().trim(),
+                pfPassword.getText().trim(),
+                txtEmail.getText().trim(),
+                "patient"
+        );
+
+        PatientMoreInfo patient = new PatientMoreInfo(
+                showPatientMoreInfo.getId() != null ? showPatientMoreInfo.getId() : null,
+                txtName.getText().trim(),
+                txtSurname.getText().trim(),
+                date,
+                txtAddress.getText().trim(),
+                txtInsuranceNumber.getText().trim(),
+                user
+        );
+        return patient;
     }
 
-    private void DisableButtons(){
+    private boolean validateForm() {
+
+        if (!ValidateUtils.validateNotEmpty(txtName.getText()) || !ValidateUtils.validateNotEmpty(txtSurname.getText())) {
+            MessageUtils.showError("Validation Error", "Name and surname are required");
+            return false;
+        }
+
+        if (!ValidateUtils.validateLength(txtName.getText(), 2, 50)) {
+            MessageUtils.showError("Validation Error", "The name must be greater than 2 characters and less than 50 characters.");
+            return false;
+        }
+
+        if (!ValidateUtils.validateLength(txtSurname.getText(), 2, 50)) {
+            MessageUtils.showError("Validation Error", "The surname must be greater than 2 characters and less than 50 characters.");
+            return false;
+        }
+
+        if (dpBirthDate.getValue() == null) {
+            MessageUtils.showError("Validation Error", "Birth date is required");
+            return false;
+        }
+        if (!ValidateUtils.validateNotEmpty(txtInsuranceNumber.getText())) {
+            MessageUtils.showError("Validation Error", "Insurance number is required");
+            return false;
+        }
+
+        if (ValidateUtils.validateNotEmpty(txtAddress.getText()) && !ValidateUtils.validateLength(txtAddress.getText(), 0, 255)) {
+            MessageUtils.showError("Validation Error", "The address must be less than 255 characters.");
+            return false;
+        }
+
+        if (!ValidateUtils.validateRegex(txtInsuranceNumber.getText(), Pattern.compile("^[a-zA-Z0-9]{9}$"))) {
+            MessageUtils.showError("Validation Error", "Insurance number must be 9 alphanumeric characters");
+            return false;
+        }
+
+        if(!ValidateUtils.validateNotEmpty(txtUsername.getText())) {
+            MessageUtils.showError("Validation Error", "User name are required");
+            return false;
+        }
+
+        if (!ValidateUtils.validateNotEmpty(txtEmail.getText())) {
+            MessageUtils.showError("Validation Error", "Email is required");
+            return false;
+        }
+
+        if(!ValidateUtils.validateRegex(txtEmail.getText(), Pattern.compile("^\\S+@\\S+\\.\\S+$"))){
+            MessageUtils.showError("Validation Error", "The email does not comply with the correct format");
+            return false;
+        }
+        return true;
+    }
+
+    private void DisableButtons() {
         btnDelete.setDisable(!btnDelete.isDisable());
         btnDelete.setVisible(!btnDelete.isVisible());
         btnDelete.setManaged(!btnDelete.isManaged());
@@ -274,6 +385,11 @@ public class PatientDetailViewController implements Initializable {
         btnEdit.setVisible(!btnEdit.isVisible());
         btnEdit.setDisable(!btnEdit.isDisable());
         btnEdit.setManaged(!btnEdit.isManaged());
+    }
+
+    public void handleEdit(ActionEvent actionEvent) {
+        DisableForm(false);
+        DisableButtons();
     }
 
     public void handleClose(ActionEvent actionEvent) {
@@ -310,5 +426,6 @@ public class PatientDetailViewController implements Initializable {
     public void handleSave(ActionEvent actionEvent) {
         DisableForm(false);
         DisableButtons();
+        EditPatient();
     }
 }

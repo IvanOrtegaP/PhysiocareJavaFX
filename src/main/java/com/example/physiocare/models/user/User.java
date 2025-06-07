@@ -1,23 +1,41 @@
 package com.example.physiocare.models.user;
 
+import com.google.gson.annotations.SerializedName;
+
 public class User {
+    @SerializedName("_id")
+    private String id;
     private String login;
     private String password;
     private String email;
     private String rol;
-    private String lat;
     private String avatar;
 
     public User() {
     }
 
-    public User(String login, String password, String email, String rol, String lat, String avatar) {
+    public User(String id, String login, String password, String email, String rol) {
+        this.id = id;
         this.login = login;
         this.password = password;
         this.email = email;
         this.rol = rol;
-        this.lat = lat;
-        this.avatar = avatar;
+    }
+
+    //    public User(String login, String password, String email, String rol, String avatar) {
+//        this.login = login;
+//        this.password = password;
+//        this.email = email;
+//        this.rol = rol;
+//        this.avatar = avatar;
+//    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getLogin() {
@@ -50,14 +68,6 @@ public class User {
 
     public void setRol(String rol) {
         this.rol = rol;
-    }
-
-    public String getLat() {
-        return lat;
-    }
-
-    public void setLat(String lat) {
-        this.lat = lat;
     }
 
     public String getAvatar() {

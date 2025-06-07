@@ -2,9 +2,7 @@ package com.example.physiocare.controller.patients;
 
 import com.example.physiocare.models.appointment.AppoinmentListResponse;
 import com.example.physiocare.models.appointment.Appointment;
-import com.example.physiocare.models.patient.Patient;
-import com.example.physiocare.models.patient.PatientListResponse;
-import com.example.physiocare.models.patient.PatientResponse;
+import com.example.physiocare.models.patient.*;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
@@ -25,6 +23,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ResourceBundle;
+import java.util.concurrent.CompletableFuture;
 
 public class PatientsViewController implements Initializable {
     private final ObservableList<Patient> patients = FXCollections.observableArrayList();
@@ -39,15 +38,12 @@ public class PatientsViewController implements Initializable {
     public TableView<Patient> tblPatients;
     public TableColumn<Patient,String> colName;
     public TableColumn<Patient,String> colSurname;
-    public TableColumn<Patient,String> colEmail;
     public TableColumn<Patient,String> colInsuranceNumber;
     public TableColumn<Patient, Date> colBirthDate;
     public Button btnViewPhysios;
-    public Button btnViewPatients;
 
     private Patient currentPatient = null;
     private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
-    private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
 
     //Mete dilay a la busqueda por texto
     PauseTransition pause = new PauseTransition(Duration.millis(600));
@@ -89,19 +85,48 @@ public class PatientsViewController implements Initializable {
             TableRow<Patient> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/patients/PatientDetailView.fxml",
-                            "PhysioCare - Patient Details");
+                    getPatientId().thenAccept(patient -> Platform.runLater(() -> {
+                        if(patient != null){
+                            Stage stage = ScreenUtils.createViewModal(
+                                    "/com/example/physiocare/patients/PatientDetailView.fxml",
+                                    "PhysioCare - Patient Details");
 
-                    if (stage != null) {
-                        PatientDetailViewController controller =
-                                (PatientDetailViewController) stage.getScene().getRoot().getUserData();
-                        controller.setShowPatient(row.getItem());
-                        controller.postInit();
-                        stage.showAndWait();
-                    }
+                            if (stage != null) {
+                                PatientDetailViewController controller =
+                                        (PatientDetailViewController) stage.getScene().getRoot().getUserData();
+                                controller.setShowPatientMoreInfo(patient);
+                                controller.postInit();
+
+                                stage.setOnHidden(Windows -> loadPatients());
+                                stage.showAndWait();
+                            }
+                        }else {
+                            MessageUtils.showError("Error to found patient" ,
+                                    "The patient selected not found or error occurred");
+                        }
+                    }));
                 }
             });
             return row;
+        });
+    }
+
+    private CompletableFuture<PatientMoreInfo> getPatientId(){
+        String url = ServiceUtils.SERVER + "/patients/" + currentPatient.getId();
+
+        return ServiceUtils.getResponseAsync(url, null,"GET").thenApply(json -> {
+            System.out.println("DEBUR - FIND ID PATIENT Respuesta JSON:" + json);
+            PatientMoreInfoResponse resp = gson.fromJson(json, PatientMoreInfoResponse.class);
+            if(resp != null && resp.isOk() && resp.getPatient() != null){
+                return resp.getPatient();
+            }else {
+                return null;
+            }
+        }).exceptionally(ex -> {
+            System.out.println(ex.getMessage());
+            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+            ex.printStackTrace();
+            return  null;
         });
     }
 
@@ -119,7 +144,8 @@ public class PatientsViewController implements Initializable {
             if (response == null || !response.isOk()) {
                 System.out.println("No se encontraron pacientes o hubo un error");
                 patients.clear();
-                MessageUtils.showError("Error", "The patient list could not be loaded or no results were found");
+                MessageUtils.showError("Error", "The patient list could not be loaded or " +
+                        "no results were found");
             } else {
                 System.out.println(response.getPatients().size());
                 patients.setAll(response.getPatients());
