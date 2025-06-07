@@ -83,19 +83,9 @@ public class PatientDetailViewController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-
         borderPane.setUserData(this);
-        System.out.println(addPatient);
-        System.out.println(showPatient);
-        if(addPatient){
-            this.tblUpcoming.setDisable(true);
-            this.tblHistory.setDisable(true);
-        }else {
-            setupTableHistory();
-            setupTableUpcoming();
-        }
-
-
+        setupTableHistory();
+        setupTableUpcoming();
         DisableForm(true);
         btnSave.setDisable(true);
         btnSave.setVisible(false);

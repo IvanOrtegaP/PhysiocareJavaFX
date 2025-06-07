@@ -8,11 +8,11 @@ import java.util.List;
 public class PhysioListResponse extends BaseResponse {
     private List<Physio> result;
 
-    public List<Physio> getResult() {
+    public List<Physio> getPhysios() {
         return result;
     }
 
-    public void setResult(List<Physio> result) {
+    public void setPhysios(List<Physio> result) {
         this.result = result;
     }
 }

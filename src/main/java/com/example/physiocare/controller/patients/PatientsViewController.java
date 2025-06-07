@@ -63,9 +63,6 @@ public class PatientsViewController implements Initializable {
             pause.setOnFinished(event ->loadPatients(newValue.trim()));
             pause.playFromStart();
         });
-        btnViewPatients.setVisible(false);
-        btnViewPatients.setManaged(false);
-        btnViewPatients.setDisable(true);
     }
 
     private void loadPatients() {
@@ -155,18 +152,15 @@ public class PatientsViewController implements Initializable {
     public void handleRefresh(ActionEvent actionEvent) {
     }
 
-    public void handleViewPhysios(ActionEvent actionEvent) {
-        ChangeButtons();
-    }
+    public void handleViewPhysios(ActionEvent actionEvent) throws IOException {
+//        ChangeButtons();
+        Stage stage = (Stage) txtSearch.getScene().getWindow();
+        ScreenUtils.loadView(stage, "/com/example/physiocare/physios/PhysiosView.fxml",
+                "PhysioCare - Physios");
 
-    public void handleViewPatients(ActionEvent actionEvent) {
-        ChangeButtons();
     }
 
     private void ChangeButtons(){
-        btnViewPatients.setVisible(!btnViewPatients.isVisible());
-        btnViewPatients.setManaged(!btnViewPatients.isManaged());
-        btnViewPatients.setDisable(!btnViewPatients.isDisable());
         btnViewPhysios.setVisible(!btnViewPhysios.isVisible());
         btnViewPhysios.setManaged(!btnViewPhysios.isManaged());
         btnViewPhysios.setDisable(!btnViewPhysios.isDisable());

@@ -1,18 +1,17 @@
 package com.example.physiocare.models.physio;
 
-import com.google.gson.annotations.SerializedName;
+import com.example.physiocare.models.user.User;
 
-
-public class Physio extends PhysioBase {
+public class PhysioMoreInfo extends PhysioBase{
     private String specialty;
     private String licenseNumber;
-    private String user;
+    private User user;
 
-    public Physio(){
+    public PhysioMoreInfo(){
         super();
     }
 
-    public Physio(String id, String name, String surname, String specialty, String licenseNumber, String user) {
+    public PhysioMoreInfo(String id, String name, String surname, String specialty, String licenseNumber, User user) {
         super(id, name, surname);
         this.specialty = specialty;
         this.licenseNumber = licenseNumber;
@@ -35,16 +34,11 @@ public class Physio extends PhysioBase {
         this.licenseNumber = licenseNumber;
     }
 
-    public String getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void setUser(String user) {
+    public void setUser(User user) {
         this.user = user;
-    }
-
-    @Override
-    public String toString() {
-        return super.getName();
     }
 }

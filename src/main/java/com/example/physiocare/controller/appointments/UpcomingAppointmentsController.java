@@ -90,9 +90,9 @@ public class UpcomingAppointmentsController implements Initializable {
                 System.out.println("No se encontraron los physios o hubo un error");
                 MessageUtils.showError("Error", "The physios not found");
             } else {
-                cbPhysio.setItems(FXCollections.observableList(response.getResult()));
-                if(!response.getResult().isEmpty())
-                    cbPhysio.getSelectionModel().select(response.getResult().getFirst());
+                cbPhysio.setItems(FXCollections.observableList(response.getPhysios()));
+                if(!response.getPhysios().isEmpty())
+                    cbPhysio.getSelectionModel().select(response.getPhysios().getFirst());
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));

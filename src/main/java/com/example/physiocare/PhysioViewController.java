@@ -104,7 +104,7 @@ public class PhysioViewController {
                 MessageUtils.showError("Error", "The physios list could not be loaded or no results were found.");
                 return null;
             } else {
-                physios.setAll(response.getResult());
+                physios.setAll(response.getPhysios());
                 clearSelection();
                 return null;
             }
@@ -237,7 +237,7 @@ public class PhysioViewController {
         txtSurname.setText(physio.getSurname());
         cbSpecialty.setValue(physio.getSpecialty());
         txtLicenseNumber.setText(physio.getLicenseNumber());
-        txtEmail.setText(physio.getEmail());
+//        txtEmail.setText(physio.getEmail());
     }
 
     private void clearForm() {
