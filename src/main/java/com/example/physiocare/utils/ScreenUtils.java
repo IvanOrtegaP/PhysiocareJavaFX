@@ -12,8 +12,28 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ScreenUtils {
-    public static void loadView(Stage stage , String view, String titleView) throws IOException {
-        Parent root = FXMLLoader.load(Objects.requireNonNull(ScreenUtils.class.getResource(view)));
+    public static void loadView(Stage stage, String view, String titleView) throws IOException {
+        try {
+            Parent root = FXMLLoader.load(Objects.requireNonNull(ScreenUtils.class.getResource(view)));
+            stage.setScene(new Scene(root));
+            stage.setTitle(titleView);
+            stage.show();
+        } catch (IOException e) {
+            System.err.println("Error loading view: " + view);
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    public static void loadViewWithRole(Stage stage, String view, String titleView, String role) throws IOException {
+        FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(ScreenUtils.class.getResource(view)));
+        Parent root = loader.load();
+
+        Object controller = loader.getController();
+        if (controller instanceof RoleAwareController) {
+            ((RoleAwareController) controller).setRole(role);
+        }
+
         stage.setScene(new Scene(root));
         stage.setTitle(titleView);
         stage.show();

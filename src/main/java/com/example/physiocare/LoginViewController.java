@@ -40,12 +40,18 @@ public class LoginViewController {
                         Platform.runLater(() -> {
                             try {
                                 Stage stage = (Stage) txtUsername.getScene().getWindow();
-                                if(ServiceUtils.getRol()!= null && ServiceUtils.getRol().equals("admin")){
-                                    ScreenUtils.loadView(stage , "/com/example/physiocare/patients/PatientsView.fxml" ,
-                                            "PhysioCare - Main Menu"  );
+                                String role = ServiceUtils.getRol();
+                                if (role != null) {
+                                    if (role.equals("admin")) {
+                                        ScreenUtils.loadView(stage, "/com/example/physiocare/patients/PatientsView.fxml",
+                                                "PhysioCare - Main Menu");
+                                    } else if (role.equals("physio")) {
+                                        ScreenUtils.loadViewWithRole(stage, "/com/example/physiocare/patients/PatientsView.fxml",
+                                                "PhysioCare - Physio Dashboard", role);
+                                    } else {
+                                        lblMessage.setText("Unknown role: " + role);
+                                    }
                                 }
-//                                loadMainView();
-
                             } catch (IOException e) {
                                 MessageUtils.showError("Error", "Failed to load application");
                                 e.printStackTrace();
