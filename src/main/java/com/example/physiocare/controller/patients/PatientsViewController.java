@@ -175,10 +175,6 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
         };
     }
 
-
-    public void handleRefresh(ActionEvent actionEvent) {
-    }
-
     public void handleViewPhysios(ActionEvent actionEvent) throws IOException {
 //        ChangeButtons();
         Stage stage = (Stage) txtSearch.getScene().getWindow();
@@ -202,7 +198,18 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
     }
 
     public void handleAddPatient(ActionEvent actionEvent) {
+        Stage stage = ScreenUtils.createViewModal(
+                "/com/example/physiocare/patients/PatientDetailView.fxml",
+                "PhysioCare - Patient Details");
 
+        if(stage != null){
+            PatientDetailViewController controller =
+                    (PatientDetailViewController) stage.getScene().getRoot().getUserData();
+            controller.setAddPatient(true);
+            controller.postInit();
+            stage.setOnHidden(Windows -> loadPatients());
+            stage.showAndWait();
+        }
     }
 
     public void handleEditPatient(ActionEvent actionEvent) {

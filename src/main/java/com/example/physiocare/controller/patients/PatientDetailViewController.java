@@ -30,10 +30,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -74,6 +71,9 @@ public class PatientDetailViewController implements Initializable {
     @FXML
     public BorderPane borderPane;
     public Button btnSave;
+    public Tab tabPatHistoryApp;
+    public Tab tabPatUpcomingApp;
+    public Tab tabPatInf;
     private Record RecordShowPatient;
     private Boolean addPatient;
     private PatientMoreInfo showPatientMoreInfo;
@@ -112,15 +112,22 @@ public class PatientDetailViewController implements Initializable {
      * Funcion importante que se ejecuta despues del inicialize se ejecuata a mano.
      */
     public void postInit() {
-        System.out.println(showPatientMoreInfo);
-        if (showPatientMoreInfo != null) {
-            populateForm();
-            getAppointmentsPatient();
+        if(addPatient == null || !addPatient){
+            if (showPatientMoreInfo != null) {
+                populateForm();
+                getAppointmentsPatient();
+            }
+        }else {
+            tabPane.getTabs().remove(tabPatUpcomingApp);
+            tabPane.getTabs().remove(tabPatHistoryApp);
+            DisableForm(false);
+            DisableButtons();
         }
+
     }
 
-    public void populateForm(){
-        if(showPatientMoreInfo != null){
+    public void populateForm() {
+        if (showPatientMoreInfo != null) {
             txtName.setText((showPatientMoreInfo.getName() != null ? showPatientMoreInfo.getName() : "No tiene nombre asignado"));
             txtSurname.setText((showPatientMoreInfo.getSurname() != null ? showPatientMoreInfo.getSurname() : "No tiene apellido asignado"));
             txtAddress.setText((showPatientMoreInfo.getAddress() != null ? showPatientMoreInfo.getAddress() : "No tiene direccion asignada"));
@@ -289,29 +296,75 @@ public class PatientDetailViewController implements Initializable {
             System.out.println("DEBUG- PATIENT PUT JSON : " + json);
             return gson.fromJson(json, PatientMoreInfoResponse.class);
         }).thenAccept(resp -> Platform.runLater(() -> {
-            if(resp != null && resp.isOk()){
+            if (resp != null && resp.isOk()) {
                 showPatientMoreInfo = resp.getPatient();
-                DisableButtons();
                 populateForm();
                 DisableForm(true);
+            } else {
+                System.out.println();
+                String errro = (resp.getErrorMessage() != null) ? resp.getErrorMessage() : "Unknown error";
+                MessageUtils.showError("Error update patient", errro);
             }
         })).exceptionally(ex -> {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            MessageUtils.showError("Error update patient", ex.getMessage());
+            return null;
+        });
+    }
+
+    private void savePatient(){
+        if (!validateForm()) return;
+
+        String url = ServiceUtils.SERVER + "/patients";
+
+        Date date = Date.from(dpBirthDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+
+        PatientMoreInfo patient = getPatientMoreInfo(date);
+
+        String PatientJson = gson.toJson(patient);
+
+        System.out.println(PatientJson);
+
+        ServiceUtils.getResponseAsync(url, PatientJson, "POST").thenApply(json -> {
+            System.out.println("DEBUG- PATIENT POST JSON : " + json);
+            return gson.fromJson(json, PatientResponse.class);
+        }).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp != null && resp.isOk()) {
+                ((Stage) btnClose.getScene().getWindow()).close();
+            } else {
+                String errro = (resp.getErrorMessage() != null) ? resp.getErrorMessage() : "Unknown error";
+                MessageUtils.showError("Error post patient", errro);
+            }
+        })).exceptionally(ex -> {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            MessageUtils.showError("Error post patient", ex.getMessage());
             return null;
         });
     }
 
     private PatientMoreInfo getPatientMoreInfo(Date date) {
 
+        String idUser = Optional.ofNullable(showPatientMoreInfo)
+                .map(PatientMoreInfo::getUser)
+                .map(User::getId)
+                .orElse(null);
+
         User user = new User(
-                (showPatientMoreInfo.getUser().getId() != null ? showPatientMoreInfo.getUser().getId() : null),
+                idUser,
                 txtUsername.getText().trim(),
                 pfPassword.getText().trim(),
                 txtEmail.getText().trim(),
                 "patient"
         );
 
-        PatientMoreInfo patient = new PatientMoreInfo(
-                showPatientMoreInfo.getId() != null ? showPatientMoreInfo.getId() : null,
+        String idPatient = Optional.ofNullable(showPatientMoreInfo)
+                .map(PatientMoreInfo::getId)
+                .orElse(null);
+
+        return new PatientMoreInfo(
+                idPatient,
                 txtName.getText().trim(),
                 txtSurname.getText().trim(),
                 date,
@@ -319,7 +372,6 @@ public class PatientDetailViewController implements Initializable {
                 txtInsuranceNumber.getText().trim(),
                 user
         );
-        return patient;
     }
 
     private boolean validateForm() {
@@ -358,7 +410,7 @@ public class PatientDetailViewController implements Initializable {
             return false;
         }
 
-        if(!ValidateUtils.validateNotEmpty(txtUsername.getText())) {
+        if (!ValidateUtils.validateNotEmpty(txtUsername.getText())) {
             MessageUtils.showError("Validation Error", "User name are required");
             return false;
         }
@@ -368,7 +420,7 @@ public class PatientDetailViewController implements Initializable {
             return false;
         }
 
-        if(!ValidateUtils.validateRegex(txtEmail.getText(), Pattern.compile("^\\S+@\\S+\\.\\S+$"))){
+        if (!ValidateUtils.validateRegex(txtEmail.getText(), Pattern.compile("^\\S+@\\S+\\.\\S+$"))) {
             MessageUtils.showError("Validation Error", "The email does not comply with the correct format");
             return false;
         }
@@ -424,8 +476,15 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleSave(ActionEvent actionEvent) {
-        DisableForm(false);
-        DisableButtons();
-        EditPatient();
+        System.out.println(addPatient);
+        if(addPatient == null || !addPatient){
+            if(showPatientMoreInfo != null){
+                EditPatient();
+                DisableForm(false);
+                DisableButtons();
+            }
+        }else {
+            savePatient();
+        }
     }
 }
