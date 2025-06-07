@@ -1,5 +1,6 @@
 package com.example.physiocare.controller.physios;
 
+import com.example.physiocare.controller.patients.PatientDetailViewController;
 import com.example.physiocare.models.appointment.AppoinmentListResponse;
 import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.models.physio.Physio;
@@ -94,7 +95,26 @@ public class PhysiosViewController implements Initializable {
                         btnDelete.setDisable(false);
                     }
                 });
-        //TODO añadir el doble click para mostar el detalle del physio
+
+        tblPhysios.setRowFactory(tv -> {
+            TableRow<Physio> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/physios/PhysiosDetailView.fxml",
+                            "PhysioCare - Physio Details");
+
+                    if (stage != null) {
+//                        PatientDetailViewController controller =
+//                                (PatientDetailViewController) stage.getScene().getRoot().getUserData();
+//                        controller.setShowPatient(row.getItem());
+//                        controller.postInit();
+                        stage.showAndWait();
+                    }
+                }
+            });
+            return row;
+        });
+
     }
 
     private void DeletePhysio() {
