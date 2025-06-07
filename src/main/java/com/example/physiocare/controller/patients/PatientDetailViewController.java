@@ -101,6 +101,9 @@ public class PatientDetailViewController implements Initializable {
         dpBirthDate.setDisable(disable);
     }
 
+    /**
+     * Funcion importante que se ejecuta despues del inicialize se ejecuata a mano.
+     */
     public void postInit() {
         if (showPatient != null) {
             txtName.setText((showPatient.getName() != null ? showPatient.getName() : "No tiene nombre asignado"));
