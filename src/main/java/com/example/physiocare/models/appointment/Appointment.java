@@ -24,6 +24,12 @@ public class Appointment {
         this.physio = physio;
     }
 
+    public Appointment(Date date, Physio physio, String confirm) {
+        this.date = date;
+        this.physio = physio;
+        this.confirm = confirm;
+    }
+
     public Appointment(Date date, Physio physio, String diagnosis, String treatment, String observations) {
         this.date = date;
         this.physio = physio;

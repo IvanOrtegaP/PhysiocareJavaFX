@@ -75,14 +75,15 @@ public class PatientDetailViewController implements Initializable {
     public Tab tabPatUpcomingApp;
     public Tab tabPatInf;
     private Record RecordShowPatient;
-    private Boolean addPatient;
+    private Boolean addPatient = false;
     private PatientMoreInfo showPatientMoreInfo;
+    private Appointment currentAppointmentUpcoming;
 
     public void setShowPatientMoreInfo(PatientMoreInfo showPatientMoreInfo) {
         this.showPatientMoreInfo = showPatientMoreInfo;
     }
 
-    public void setAddPatient(Boolean add) {
+    public void setAddPatient(boolean add) {
         this.addPatient = add;
     }
 
@@ -112,18 +113,17 @@ public class PatientDetailViewController implements Initializable {
      * Funcion importante que se ejecuta despues del inicialize se ejecuata a mano.
      */
     public void postInit() {
-        if(addPatient == null || !addPatient){
+        if (!addPatient) {
             if (showPatientMoreInfo != null) {
                 populateForm();
                 getAppointmentsPatient();
             }
-        }else {
+        } else {
             tabPane.getTabs().remove(tabPatUpcomingApp);
             tabPane.getTabs().remove(tabPatHistoryApp);
             DisableForm(false);
             DisableButtons();
         }
-
     }
 
     public void populateForm() {
@@ -170,6 +170,35 @@ public class PatientDetailViewController implements Initializable {
         colDateUpcoming.setCellFactory(col -> buildDateCell(formatDate));
         colTimeUpcoming.setCellFactory(col -> buildDateCell(formatTime));
         colPhysioNameUpcoming.setCellValueFactory(new PropertyValueFactory<>("physio"));
+
+        tblUpcoming.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldSelection, newSelection) -> {
+                    if(newSelection != null){
+                        currentAppointmentUpcoming = newSelection;
+                        btnDelete.setDisable(false);
+                    }
+        });
+
+        tblUpcoming.setRowFactory(tv -> {
+            TableRow<Appointment> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if(event.getClickCount() == 2 && (!row.isEmpty())){
+                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentView.fxml",
+                            "PhysioCare - Detail Appointment");
+
+                    if(stage != null){
+                        UpcomingAppointmentsController controller =
+                                (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
+                        controller.setShowRecord(RecordShowPatient);
+                        controller.setAddRecord(true);
+                        controller.postInit();
+                        stage.showAndWait();
+                        getAppointmentsPatient();
+                    }
+                }
+            });
+            return row;
+        });
     }
 
     public void getAppointmentsPatient() {
@@ -313,7 +342,7 @@ public class PatientDetailViewController implements Initializable {
         });
     }
 
-    private void savePatient(){
+    private void savePatient() {
         if (!validateForm()) return;
 
         String url = ServiceUtils.SERVER + "/patients";
@@ -323,8 +352,6 @@ public class PatientDetailViewController implements Initializable {
         PatientMoreInfo patient = getPatientMoreInfo(date);
 
         String PatientJson = gson.toJson(patient);
-
-        System.out.println(PatientJson);
 
         ServiceUtils.getResponseAsync(url, PatientJson, "POST").thenApply(json -> {
             System.out.println("DEBUG- PATIENT POST JSON : " + json);
@@ -450,11 +477,14 @@ public class PatientDetailViewController implements Initializable {
 
     public void handleAddAppointment(ActionEvent actionEvent) {
 
-        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentView.fxml", "PhysioCare - New Appointment");
+        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentView.fxml",
+                "PhysioCare - New Appointment");
 
         if (stage != null) {
             UpcomingAppointmentsController controller = (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
             controller.setShowRecord(RecordShowPatient);
+            controller.setAddRecord(true);
+            controller.postInit();
             stage.showAndWait();
             getAppointmentsPatient();
         }
@@ -476,14 +506,13 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleSave(ActionEvent actionEvent) {
-        System.out.println(addPatient);
-        if(addPatient == null || !addPatient){
-            if(showPatientMoreInfo != null){
+        if (!addPatient) {
+            if (showPatientMoreInfo != null) {
                 EditPatient();
                 DisableForm(false);
                 DisableButtons();
             }
-        }else {
+        } else {
             savePatient();
         }
     }

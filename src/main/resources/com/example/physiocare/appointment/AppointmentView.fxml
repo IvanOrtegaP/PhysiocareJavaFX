@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.ChoiceBox?>
 <DialogPane fx:id="dialogPane" prefHeight="453.0" prefWidth="682.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.physiocare.controller.appointments.UpcomingAppointmentsController">
 
@@ -36,18 +37,18 @@
                     <DatePicker fx:id="dpDate" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
                     <Label text="Time:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                    <ComboBox fx:id="cbTime" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                    <ChoiceBox fx:id="cbTime" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                     <Label text="Physio:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                    <ComboBox fx:id="cbPhysio" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                    <ChoiceBox fx:id="cbPhysio" GridPane.columnIndex="1" GridPane.rowIndex="2" />
 
-                    <Label text="Diagnosis:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <Label fx:id="lblDiagnosis" text="Diagnosis:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                     <TextArea fx:id="taDiagnosis" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
 
-                    <Label text="Treatment:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                    <Label fx:id="lblTreatment" text="Treatment:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
                     <TextArea fx:id="taTreatment" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
 
-                    <Label text="Observations:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                    <Label fx:id="lblObservations" text="Observations:" GridPane.columnIndex="0" GridPane.rowIndex="5" />
                     <TextArea fx:id="taObservations" prefRowCount="3" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
 
                     <columnConstraints>

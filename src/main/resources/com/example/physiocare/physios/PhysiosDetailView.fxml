@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox prefHeight="441.0" prefWidth="600.0" spacing="20" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.physios.PhysiosDetailViewController">
+<VBox fx:id="VBoxMain" prefHeight="441.0" prefWidth="600.0" spacing="20" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.physios.PhysiosDetailViewController">
         <padding>
             <Insets bottom="10" left="10" right="10" top="10" />
         </padding>
@@ -51,7 +51,7 @@
                 <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
                 <TextField fx:id="txtUsername" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
-                <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <Label fx:id="lblPassword" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                 <PasswordField fx:id="pfPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                 <Label text="Email:" GridPane.rowIndex="2" />

@@ -16,14 +16,14 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class UpcomingAppointmentsController implements Initializable {
     public DatePicker dpDate;
-    public ComboBox cbTime;
-    public ComboBox<Physio> cbPhysio;
+    public ChoiceBox<String> cbTime;
+    public ChoiceBox<Physio> cbPhysio;
     public TextArea taDiagnosis;
     public TextArea taTreatment;
     public TextArea taObservations;
@@ -34,18 +34,71 @@ public class UpcomingAppointmentsController implements Initializable {
     public Button buttDelete;
     public Button ButtSave;
     public DialogPane dialogPane;
+    public Label lblDiagnosis;
+    public Label lblTreatment;
+    public Label lblObservations;
+
     private Record showRecord;
+    private Appointment showAppointment;
+    private boolean addRecord = false;
+    private final List<String> hoursList = List.of("09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00");
+
     private Gson gson = new Gson();
+
+    public void setAddRecord(boolean add){
+        this.addRecord = add;
+    }
+
+    public void setShowAppointment(Appointment showAppointment){
+        this.showAppointment = showAppointment;
+    }
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         dialogPane.setUserData(this);
         GetPhysios();
-        cbTime.setDisable(true);
-        taDiagnosis.setDisable(true);
-        taObservations.setDisable(true);
-        taTreatment.setDisable(true);
+        cbTime.setItems(FXCollections.observableList(hoursList));
+        cbTime.getSelectionModel().selectFirst();
     }
+
+
+    public void postInit(){
+        System.out.println(addRecord);
+        if(addRecord){
+            hideFielsds();
+        }
+    }
+
+    private void hideFielsds(){
+        taDiagnosis.setDisable(true);
+        taDiagnosis.setVisible(false);
+        lblDiagnosis.setVisible(false);
+
+        taObservations.setDisable(true);
+        taObservations.setVisible(false);
+        lblObservations.setManaged(false);
+        lblDiagnosis.setVisible(false);
+
+        taTreatment.setDisable(true);
+        taTreatment.setVisible(false);
+        lblTreatment.setVisible(false);
+    }
+
+    private void PopulateForm(){
+
+    }
+
+    private Date CreateDate() {
+        LocalDate localDate = dpDate.getValue();
+        String selectedTime = cbTime.getValue();
+        String[] timeParts = selectedTime.split(":");
+        int hour = Integer.parseInt(timeParts[0]);
+        int minute = Integer.parseInt(timeParts[1]);
+        LocalDateTime dateTime = localDate.atTime(hour, minute);
+
+        return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
 
     public void setShowRecord(Record showRecord) {
         this.showRecord = showRecord;
@@ -57,10 +110,10 @@ public class UpcomingAppointmentsController implements Initializable {
 
         String url = ServiceUtils.SERVER + "/records/" + showRecord.getId() + "/appointments";
 
-        Date date = Date.from(dpDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
+        Date date = CreateDate();
         Physio selectedPhysio = cbPhysio.getSelectionModel().getSelectedItem();
 
-        Appointment appointment = new Appointment(date, selectedPhysio);
+        Appointment appointment = new Appointment(date, selectedPhysio, "pending");
         String requestAppoinment = gson.toJson(appointment);
 
         System.out.println(requestAppoinment);
@@ -73,6 +126,7 @@ public class UpcomingAppointmentsController implements Initializable {
                 MessageUtils.showError("Error", "The physios not found");
             } else {
                 MessageUtils.showMessage("Insert is sutesful" , "La insercion es correcta");
+                ((Stage) buttClose.getScene().getWindow()).close();
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
@@ -101,7 +155,33 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
     public void handleDelete() {
+        if(showAppointment == null && showRecord == null) return;
 
+        String message = "Are you sure want to delete this appointment?";
+
+        MessageUtils.showConfirmation("Delete Appointment", message , "Delete Appointmet").showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                DelteApponintment();
+            }
+        });
+    }
+
+    private void DelteApponintment(){
+        String url = ServiceUtils.SERVER + "/records/" + showRecord.getId() + "/appointments/" + showAppointment.getId();
+
+        ServiceUtils.getResponseAsync(url, null, "DELETE")
+                .thenApply(json -> {
+                    System.out.println("Debug DELETE APPOINTMENT : " + json);
+                    return gson.fromJson(json, AppointmentResponse.class);
+                }).thenAccept(resp -> Platform.runLater(() -> {
+                    if(resp != null && resp.isOk()){
+                        MessageUtils.showMessage("Success", "Appointment deleted successfully");
+                        ((Stage) buttClose.getScene().getWindow()).close();
+                    }
+                })).exceptionally(ex -> {
+                    Platform.runLater(() -> MessageUtils.showError("Error deleting appointment", ex.getLocalizedMessage()));
+                    return null;
+                });
     }
 
     public void handleClose() {
@@ -124,8 +204,11 @@ public class UpcomingAppointmentsController implements Initializable {
             return false;
         }
 
+        if(cbTime.getSelectionModel().getSelectedItem() == null){
+            MessageUtils.showError("Validation Error", "Error you must select a time the date");
+            return false;
+        }
+
         return true;
     }
-
-
 }
