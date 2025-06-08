@@ -43,4 +43,5 @@ public class ValidateUtils {
     public static Boolean validateRegex(String text, Pattern regex){
         return text != null && regex.matcher(text).find();
     }
+
 }

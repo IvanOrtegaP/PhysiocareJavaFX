@@ -40,7 +40,6 @@
             <HBox alignment="CENTER_LEFT" spacing="10">
                 <TextField fx:id="txtSearch" promptText="Search by surname..." style="-fx-pref-width: 250;" />
                 <Button fx:id="btnAdd" onAction="#handleAddPhysio" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 5;" text="Add" />
-                <Button fx:id="btnEdit" onAction="#handleEditPhysio" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-background-radius: 5;" text="Edit" />
                 <Button fx:id="btnDelete" onAction="#handleDeletePhysio" style="-fx-background-color: #c0392b; -fx-text-fill: white; -fx-background-radius: 5;" text="Delete" />
             </HBox>
 
