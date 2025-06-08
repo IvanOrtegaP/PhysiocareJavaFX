@@ -34,6 +34,10 @@ public class ServiceUtils {
         ServiceUtils.token = token;
     }
 
+    public static String getToken() {
+        return token;
+    }
+
     public static void removeToken() {
         ServiceUtils.token = null;
     }
@@ -198,5 +202,55 @@ public class ServiceUtils {
 
     public static CompletableFuture<Boolean> loginAsync(String username, String password) {
         return CompletableFuture.supplyAsync(() -> login(username, password));
+    }
+
+    public static String getResponseSync(String url, Object o, String method) {
+        BufferedReader bufInput = null;
+        StringJoiner result = new StringJoiner("\n");
+        try {
+            URL urlConn = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) urlConn.openConnection();
+            conn.setReadTimeout(20000);
+            conn.setConnectTimeout(15000);
+            conn.setRequestMethod(method);
+
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("User-Agent", "JavaFX-Client");
+
+            if (token != null) {
+                conn.setRequestProperty("Authorization", "Bearer " + token);
+            }
+
+            if (o != null) {
+                String jsonData = new Gson().toJson(o);
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                conn.setDoOutput(true);
+                try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+                    wr.write(jsonData.getBytes());
+                    wr.flush();
+                }
+            }
+
+            int status = conn.getResponseCode();
+            InputStream input = (status < 400) ? conn.getInputStream() : conn.getErrorStream();
+            if ("gzip".equals(conn.getContentEncoding())) {
+                input = new GZIPInputStream(input);
+            }
+
+            bufInput = new BufferedReader(new InputStreamReader(input));
+            String line;
+            while ((line = bufInput.readLine()) != null) {
+                result.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (bufInput != null) bufInput.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return result.toString();
     }
 }

@@ -1,131 +1,181 @@
 package com.example.physiocare.controller.appointments;
 
-import com.example.physiocare.models.appointment.AppointmentResponse;
-import com.example.physiocare.models.physio.Physio;
-import com.example.physiocare.models.physio.PhysioListResponse;
 import com.example.physiocare.models.appointment.Appointment;
+import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.record.Record;
 import com.example.physiocare.utils.MessageUtils;
+import com.example.physiocare.utils.PhysioListDeserializer;
 import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.fxml.Initializable;
+import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
-import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.List;
 
-public class UpcomingAppointmentsController implements Initializable {
-    public DatePicker dpDate;
-    public ComboBox cbTime;
-    public ComboBox<Physio> cbPhysio;
-    public TextArea taDiagnosis;
-    public TextArea taTreatment;
-    public TextArea taObservations;
-    public ButtonType btnClose;
-    public ButtonType btnDelete;
-    public ButtonType btnSave;
-    public Button buttClose;
-    public Button buttDelete;
-    public Button ButtSave;
-    public DialogPane dialogPane;
+public class UpcomingAppointmentsController {
+
+    public enum OperationType {
+        VIEW, CREATE, EDIT
+    }
+
+    @FXML
+    private DatePicker dpDate;
+    @FXML
+    private ComboBox<String> cbTime;
+    @FXML
+    private ComboBox<Physio> cbPhysio;
+    @FXML
+    private TextArea taDiagnosis;
+    @FXML
+    private TextArea taTreatment;
+    @FXML
+    private TextArea taObservations;
+    @FXML
+    private Button buttClose;
+    @FXML
+    private Button buttDelete;
+    @FXML
+    private Button ButtSave;
+
+    private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(List.class, new PhysioListDeserializer())
+            .create();
+    private Appointment appointment;
+    private OperationType operationType;
     private Record showRecord;
-    private Gson gson = new Gson();
 
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        dialogPane.setUserData(this);
-        GetPhysios();
-        cbTime.setDisable(true);
-        taDiagnosis.setDisable(true);
-        taObservations.setDisable(true);
-        taTreatment.setDisable(true);
+
+    @FXML
+    private void initialize() {
+        cbTime.setItems(FXCollections.observableArrayList("09:00", "10:00", "11:00", "14:00", "15:00"));
+        loadPhysios();
     }
 
     public void setShowRecord(Record showRecord) {
         this.showRecord = showRecord;
     }
 
-    public void handleSave() {
+    public void configureModal(OperationType operationType, Appointment appointment) {
+        this.operationType = operationType;
+        this.appointment = appointment;
 
-        if(!validateForm()) return;
+        switch (operationType) {
+            case VIEW:
+                disableForm(true);
+                buttDelete.setVisible(false);
+                ButtSave.setVisible(false);
+                populateForm(appointment);
+                break;
+            case CREATE:
+                disableForm(false);
+                buttDelete.setVisible(false);
+                break;
+            case EDIT:
+                disableForm(false);
+                populateForm(appointment);
+                break;
+        }
+    }
 
-        String url = ServiceUtils.SERVER + "/records/" + showRecord.getId() + "/appointments";
+    private void disableForm(boolean disable) {
+        dpDate.setDisable(disable);
+        cbTime.setDisable(disable);
+        cbPhysio.setDisable(disable);
+        taDiagnosis.setDisable(disable);
+        taTreatment.setDisable(disable);
+        taObservations.setDisable(disable);
+    }
+
+    private void populateForm(Appointment appointment) {
+        if (appointment != null) {
+            dpDate.setValue(appointment.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+            cbPhysio.setValue(appointment.getPhysio());
+            taDiagnosis.setText(appointment.getDiagnosis());
+            taTreatment.setText(appointment.getTreatment());
+            taObservations.setText(appointment.getObservations());
+        }
+    }
+
+    private void loadPhysios() {
+        String url = ServiceUtils.SERVER + "/physios";
+        ServiceUtils.getResponseAsync(url, null, "GET")
+                .thenAccept(json -> {
+                    try {
+                        List<Physio> physios = gson.fromJson(json, List.class);
+                        Platform.runLater(() -> {
+                            if (physios != null && !physios.isEmpty()) {
+                                cbPhysio.setItems(FXCollections.observableArrayList(physios));
+                            } else {
+                                MessageUtils.showWarning("No Physios", "No physiotherapists available");
+                            }
+                        });
+                    } catch (Exception e) {
+                        Platform.runLater(() -> {
+                            MessageUtils.showError("Error", "Failed to parse physios: " + e.getMessage());
+                            System.err.println("Original JSON: " + json);
+                            e.printStackTrace();
+                        });
+                    }
+                })
+                .exceptionally(ex -> {
+                    Platform.runLater(() -> MessageUtils.showError("Error", "Failed to load physios: " + ex.getMessage()));
+                    ex.printStackTrace();
+                    return null;
+                });
+    }
+
+    @FXML
+    private void handleSave() {
+        if (!validateForm()) return;
 
         Date date = Date.from(dpDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
         Physio selectedPhysio = cbPhysio.getSelectionModel().getSelectedItem();
 
-        Appointment appointment = new Appointment(date, selectedPhysio);
-        String requestAppoinment = gson.toJson(appointment);
+        if (operationType == OperationType.CREATE) {
+            appointment = new Appointment(date, selectedPhysio);
+        } else if (operationType == OperationType.EDIT) {
+            appointment.setDate(date);
+            appointment.setPhysio(selectedPhysio);
+        }
 
-        System.out.println(requestAppoinment);
 
-        ServiceUtils.getResponseAsync(url, requestAppoinment, "POST").thenApply(json -> gson.fromJson(json,
-                AppointmentResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-
-            if (response == null || !response.isOk()) {
-                System.out.println("No se encontraron los physios o hubo un error");
-                MessageUtils.showError("Error", "The physios not found");
-            } else {
-                MessageUtils.showMessage("Insert is sutesful" , "La insercion es correcta");
-            }
-        })).exceptionally(ex -> {
-            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
-            return null;
-        });
+        MessageUtils.showMessage("Success", "Appointment saved successfully");
+        closeModal();
     }
 
-    private void GetPhysios() {
+    @FXML
+    private void handleDelete() {
+        if (appointment == null) return;
 
-        String url = ServiceUtils.SERVER + "/physios";
-
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
-                PhysioListResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-            if (response == null || !response.isOk()) {
-                System.out.println("No se encontraron los physios o hubo un error");
-                MessageUtils.showError("Error", "The physios not found");
-            } else {
-                cbPhysio.setItems(FXCollections.observableList(response.getPhysios()));
-                if(!response.getPhysios().isEmpty())
-                    cbPhysio.getSelectionModel().select(response.getPhysios().getFirst());
-            }
-        })).exceptionally(ex -> {
-            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
-            return null;
-        });
+        MessageUtils.showMessage("Success", "Appointment deleted successfully");
+        closeModal();
     }
 
-    public void handleDelete() {
-
+    @FXML
+    private void handleClose() {
+        closeModal();
     }
 
-    public void handleClose() {
-        ((Stage) dialogPane.getScene().getWindow()).close();
+    private void closeModal() {
+        ((Stage) dpDate.getScene().getWindow()).close();
     }
 
     private boolean validateForm() {
         if (dpDate.getValue() == null) {
-            MessageUtils.showError("Validation Error", "The Date is required");
+            MessageUtils.showError("Validation Error", "Date is required");
             return false;
         }
-
-        if(dpDate.getValue().isBefore(LocalDate.now())){
-            MessageUtils.showError("Validation Error", "The date must be greater than today's date.");
+        if (cbPhysio.getSelectionModel().getSelectedItem() == null) {
+            MessageUtils.showError("Validation Error", "Physio is required");
             return false;
         }
-
-        if(cbPhysio.getSelectionModel().getSelectedItem() == null){
-            MessageUtils.showError("Validation Error", "Error you must select a physio");
-            return false;
-        }
-
         return true;
     }
-
-
 }
