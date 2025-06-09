@@ -48,20 +48,20 @@ public class AppointmentsService {
         });
     }
 
-    public static CompletableFuture<BaseResponse> putAppointment(Record record, Appointment appointment) {
+    public static CompletableFuture<AppointmentResponse> putAppointment(Record record, Appointment appointment) {
         if (record == null || appointment == null) {
-            CompletableFuture<BaseResponse> failed = new CompletableFuture<>();
+            CompletableFuture<AppointmentResponse> failed = new CompletableFuture<>();
             System.out.println("Record or appointment cannot be null");
             failed.completeExceptionally(new IllegalArgumentException("Record or appointment cannot be null"));
             return failed;
         }
 
-        String url = URL_RECORDS + record.getId() + "/appointments/" + appointment.getId();
+        String url = URL_RECORDS + record.getId() + "/appointments/" + appointment.getId() + "/single";
         String requestAppoinment = gson.toJson(appointment);
 
         return ServiceUtils.getResponseAsync(url, requestAppoinment, "PUT").thenApply(json -> {
             System.out.println("Debug PUT APPOINTMENT : " + json);
-            return gson.fromJson(json, BaseResponse.class);
+            return gson.fromJson(json, AppointmentResponse.class);
         });
     }
 

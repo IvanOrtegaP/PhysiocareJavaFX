@@ -1,51 +1,52 @@
 package com.example.physiocare.controller.appointments;
 
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.record.Record;
 import com.example.physiocare.services.AppointmentsService;
 import com.example.physiocare.services.PhysiosService;
 import com.example.physiocare.utils.MessageUtils;
-import com.google.gson.Gson;
+import com.example.physiocare.utils.ValidateUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
-public class UpcomingAppointmentsController implements Initializable {
+public class AppointmentDetailViewController implements Initializable {
     private final List<String> hoursList = List.of("09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00");
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-    private final Gson gson = new Gson();
     public DatePicker dpDate;
     public ChoiceBox<String> cbTime;
     public ChoiceBox<Physio> cbPhysio;
     public TextArea taDiagnosis;
     public TextArea taTreatment;
     public TextArea taObservations;
-    public ButtonType btnClose;
     public ButtonType btnDelete;
-    public ButtonType btnSave;
     public Button buttClose;
     public Button buttDelete;
-    public Button ButtSave;
+    public Button buttSave;
     public DialogPane dialogPane;
     public Label lblDiagnosis;
     public Label lblTreatment;
     public Label lblObservations;
-    private Record showRecord;
+    public Button buttEdit;
+    private com.example.physiocare.models.record.Record showRecord;
     private Appointment showAppointment;
     private boolean addRecord = false;
+    private boolean isFutureAppointment = false;
 
     public void setAddRecord(boolean add) {
         this.addRecord = add;
@@ -55,20 +56,42 @@ public class UpcomingAppointmentsController implements Initializable {
         this.showAppointment = showAppointment;
     }
 
+    public void setShowRecord(Record showRecord) {
+        this.showRecord = showRecord;
+    }
+
+    public void setIsFutureAppointment(boolean isFutureAppointment) {
+        this.isFutureAppointment = isFutureAppointment;
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         dialogPane.setUserData(this);
         GetPhysios();
         cbTime.setItems(FXCollections.observableList(hoursList));
         cbTime.getSelectionModel().selectFirst();
+        buttSave.setDisable(true);
+        buttSave.setVisible(false);
+        buttSave.setManaged(false);
     }
 
 
     public void postInit() {
-        if (addRecord) {
+        if (isFutureAppointment) {
             hideFielsds();
-        } else if (showAppointment != null) {
-            PopulateForm();
+            if (addRecord) {
+                DisableButtons();
+            } else {
+                DisableForm(true);
+                PopulateForm();
+            }
+        } else {
+            if (addRecord) {
+                DisableButtons();
+            } else if (showAppointment != null) {
+                DisableForm(true);
+                PopulateForm();
+            }
         }
     }
 
@@ -88,18 +111,24 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
     private void PopulateForm() {
-        if(showAppointment != null){
+        if (showAppointment != null) {
             taDiagnosis.setText((showAppointment.getDiagnosis() != null ? showAppointment.getDiagnosis() : "Has no assigned diagnosis"));
             taTreatment.setText((showAppointment.getTreatment() != null ? showAppointment.getTreatment() : "Has no assigned treatment"));
             taObservations.setText((showAppointment.getTreatment() != null ? showAppointment.getTreatment() : "Has no assigned observations"));
-            try{
+            try {
                 LocalDateTime localDateTime = showAppointment.getDate().toInstant()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime();
                 dpDate.setValue(localDateTime.toLocalDate());
-                cbTime.setValue(localDateTime.format(formatter));
 
-            }catch (IllegalArgumentException | NullPointerException e){
-                cbTime.setValue(null);
+                String time = localDateTime.format(formatter);
+
+                if (cbTime.getItems().contains(time))
+                    cbTime.setValue(localDateTime.format(formatter));
+                else {
+                    cbTime.setValue(hoursList.getFirst());
+                }
+            } catch (IllegalArgumentException | NullPointerException e) {
+                cbTime.setValue(hoursList.getFirst());
             }
         }
     }
@@ -116,20 +145,22 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
 
-    public void setShowRecord(Record showRecord) {
-        this.showRecord = showRecord;
-    }
-
-    public void handleSave() {
-
+    private void saveAppointment() {
         if (!validateForm()) return;
 
-        Date date = CreateDate();
-        Physio selectedPhysio = cbPhysio.getSelectionModel().getSelectedItem();
+        Appointment appointment;
 
-        Appointment appointment = new Appointment(date, selectedPhysio, "pending");
+        if(isFutureAppointment){
+            Date date = CreateDate();
+            Physio selectedPhysio = cbPhysio.getSelectionModel().getSelectedItem();
 
-        AppointmentsService.saveAppointment(showRecord, appointment).thenAccept(resp ->
+            appointment = new Appointment(date, selectedPhysio, "pending");
+        }else {
+            appointment = getAppointment();
+            appointment.setConfirm("pending");
+        }
+
+        AppointmentsService.saveAppointment(showRecord, appointment ).thenAccept(resp ->
                 Platform.runLater(() -> {
                     if (resp == null || !resp.isOk()) {
                         System.out.println("No se encontraron los physios o hubo un error");
@@ -142,6 +173,62 @@ public class UpcomingAppointmentsController implements Initializable {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
             return null;
         });
+    }
+
+    private void EditAppointment() {
+        if (!validateForm()) return;
+
+        Appointment appointment = getAppointment();
+
+        AppointmentsService.putAppointment(showRecord, appointment).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp != null && resp.isOk() && resp.getResult() != null) {
+                showAppointment = resp.getResult();
+                System.out.println("Show appointment : " + showAppointment.getDiagnosis());
+                PopulateForm();
+                DisableForm(true);
+                DisableButtons();
+            } else {
+                String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknow error");
+                MessageUtils.showError("Error update appointment", error);
+            }
+        })).exceptionally(ex -> {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+            MessageUtils.showError("Error edit appointment", ex.getMessage());
+            return null;
+        });
+    }
+
+    private Appointment getAppointment() {
+        String idAppointment = Optional.ofNullable(showAppointment).map(Appointment::getId).orElse(null);
+        String confirmAppointment = Optional.ofNullable(showAppointment).map(Appointment::getConfirm).orElse("pending");
+
+        return new Appointment(
+                idAppointment,
+                CreateDate(),
+                cbPhysio.getSelectionModel().getSelectedItem(),
+                taDiagnosis.getText(),
+                taTreatment.getText(),
+                taObservations.getText(),
+                confirmAppointment
+        );
+    }
+
+    public void handleSave() {
+        if (addRecord) {
+            saveAppointment();
+        } else if (showAppointment != null) {
+            EditAppointment();
+        }
+    }
+
+    private void DisableForm(Boolean disable) {
+        cbTime.setDisable(disable);
+        dpDate.setDisable(disable);
+        taObservations.setDisable(disable);
+        taTreatment.setDisable(disable);
+        taDiagnosis.setDisable(disable);
+        cbPhysio.setDisable(disable);
     }
 
     private void GetPhysios() {
@@ -188,8 +275,28 @@ public class UpcomingAppointmentsController implements Initializable {
         });
     }
 
+    private void DisableButtons() {
+        buttSave.setDisable(!buttSave.isDisable());
+        buttSave.setVisible(!buttSave.isVisible());
+        buttSave.setManaged(!buttSave.isManaged());
+
+        buttEdit.setDisable(!buttEdit.isDisable());
+        buttEdit.setManaged(!buttEdit.isManaged());
+        buttEdit.setVisible(!buttEdit.isVisible());
+
+        buttDelete.setDisable(!buttDelete.isDisable());
+        buttDelete.setVisible(!buttDelete.isVisible());
+        buttDelete.setManaged(!buttDelete.isManaged());
+    }
+
     public void handleClose() {
-        ((Stage) dialogPane.getScene().getWindow()).close();
+        if (buttSave.isVisible() && !addRecord) {
+            PopulateForm();
+            DisableButtons();
+            DisableForm(true);
+        } else {
+            ((Stage) dialogPane.getScene().getWindow()).close();
+        }
     }
 
     private boolean validateForm() {
@@ -198,9 +305,16 @@ public class UpcomingAppointmentsController implements Initializable {
             return false;
         }
 
-        if (dpDate.getValue().isBefore(LocalDate.now())) {
-            MessageUtils.showError("Validation Error", "The date must be greater than today's date.");
-            return false;
+        if(isFutureAppointment){
+            if (dpDate.getValue().isBefore(LocalDate.now())) {
+                MessageUtils.showError("Validation Error", "The date must be greater than today's date.");
+                return false;
+            }
+        }else {
+            if (dpDate.getValue().isAfter(LocalDate.now())) {
+                MessageUtils.showError("Validation Error", "The date must be less than the current date.");
+                return false;
+            }
         }
 
         if (cbPhysio.getSelectionModel().getSelectedItem() == null) {
@@ -213,6 +327,19 @@ public class UpcomingAppointmentsController implements Initializable {
             return false;
         }
 
+        if (addRecord && !isFutureAppointment) {
+            if (!ValidateUtils.validateLength(taDiagnosis.getText(), 10, 500)) {
+                MessageUtils.showError("Validation Error",
+                        "The diagnosis must be greater than 10 characters and less than 500 characters.");
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    public void handleEdit(ActionEvent actionEvent) {
+        DisableForm(false);
+        DisableButtons();
     }
 }

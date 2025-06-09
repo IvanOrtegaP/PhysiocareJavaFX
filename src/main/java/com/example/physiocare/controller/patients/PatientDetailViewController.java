@@ -1,6 +1,6 @@
 package com.example.physiocare.controller.patients;
 
-import com.example.physiocare.controller.appointments.UpcomingAppointmentsController;
+import com.example.physiocare.controller.appointments.AppointmentDetailViewController;
 import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.patient.Patient;
@@ -47,23 +47,19 @@ public class PatientDetailViewController implements Initializable {
     public Button btnClose;
     public Button btnEdit;
     public Button btnDelete;
-    public TextField txtSearchUpcoming;
     public Button btnAddAppointment;
-    public Button btnEditAppointment;
     public Button btnDeleteAppointment;
     public TableView<Appointment> tblUpcoming;
     public TableColumn<Appointment, Date> colDateUpcoming;
     public TableColumn<Appointment, Date> colTimeUpcoming;
     public TableColumn<Appointment, Physio> colPhysioNameUpcoming;
-    public TextField txtSearchHistory;
     public Button btnAddHistory;
-    public Button btnEditHistory;
     public Button btnDeleteHistory;
     public TableView<Appointment> tblHistory;
     public TableColumn<Appointment, Date> colDateHistory;
     public TableColumn<Appointment, Date> colTimeHistory;
-    public TableColumn colPhysioNameHistory;
-    public TableColumn colDiagnosisHistory;
+    public TableColumn<Appointment, Physio> colPhysioNameHistory;
+    public TableColumn<Appointment ,String> colDiagnosisHistory;
     public TabPane tabPane;
     @FXML
     public BorderPane borderPane;
@@ -76,6 +72,7 @@ public class PatientDetailViewController implements Initializable {
     private boolean addPatient = false;
     private PatientMoreInfo showPatientMoreInfo;
     private Appointment currentAppointmentUpcoming;
+    private Appointment currentAppointmentHistory;
 
     public void setShowPatientMoreInfo(PatientMoreInfo showPatientMoreInfo) {
         this.showPatientMoreInfo = showPatientMoreInfo;
@@ -94,6 +91,7 @@ public class PatientDetailViewController implements Initializable {
         btnSave.setVisible(false);
         btnSave.setManaged(false);
         btnDeleteAppointment.setDisable(true);
+        btnDeleteHistory.setDisable(true);
     }
 
     private void DisableForm(Boolean disable) {
@@ -141,6 +139,18 @@ public class PatientDetailViewController implements Initializable {
         }
     }
 
+
+
+    private TableCell<Appointment, Date> buildDateCell(SimpleDateFormat formatter) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(Date item, boolean empty) {
+                super.updateItem(item, empty);
+                setText((empty || item == null) ? null : formatter.format(item));
+            }
+        };
+    }
+
     private void setupTableHistory() {
 
         colDiagnosisHistory.setCellValueFactory(new PropertyValueFactory<>("diagnosis"));
@@ -153,18 +163,37 @@ public class PatientDetailViewController implements Initializable {
 
         colPhysioNameHistory.setCellValueFactory(new PropertyValueFactory<>("physio"));
 
-    }
+        tblHistory.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldSelection, newSelection) -> {
+                    if(newSelection != null){
+                        currentAppointmentHistory = newSelection;
+                        btnDeleteHistory.setDisable(false);
+                    }
+                });
 
-    private TableCell<Appointment, Date> buildDateCell(SimpleDateFormat formatter) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(Date item, boolean empty) {
-                super.updateItem(item, empty);
-                setText((empty || item == null) ? null : formatter.format(item));
-            }
-        };
-    }
+        tblHistory.setRowFactory(tv -> {
+            TableRow<Appointment> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if(event.getClickCount() == 2 && (!row.isEmpty())){
+                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentDetailView.fxml",
+                            "PhysioCare - Detail Appointment");
 
+                    if(stage != null){
+                        AppointmentDetailViewController controller =
+                                (AppointmentDetailViewController) stage.getScene().getRoot().getUserData();
+                        controller.setShowRecord(RecordShowPatient);
+                        controller.setShowAppointment(row.getItem());
+                        controller.setIsFutureAppointment(false);
+                        controller.postInit();
+
+                        stage.setOnHidden(windows -> getAppointmentsPatient());
+                        stage.showAndWait();
+                    }
+                }
+            });
+            return row;
+        });
+    }
 
     private void setupTableUpcoming() {
         colDateUpcoming.setCellValueFactory(new PropertyValueFactory<>("date"));
@@ -186,14 +215,15 @@ public class PatientDetailViewController implements Initializable {
             TableRow<Appointment> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if(event.getClickCount() == 2 && (!row.isEmpty())){
-                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentView.fxml",
+                    Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentDetailView.fxml",
                             "PhysioCare - Detail Appointment");
 
                     if(stage != null){
-                        UpcomingAppointmentsController controller =
-                                (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
+                        AppointmentDetailViewController controller =
+                                (AppointmentDetailViewController) stage.getScene().getRoot().getUserData();
                         controller.setShowRecord(RecordShowPatient);
                         controller.setShowAppointment(row.getItem());
+                        controller.setIsFutureAppointment(true);
                         controller.postInit();
 
                         stage.setOnHidden(windows -> getAppointmentsPatient());
@@ -456,21 +486,18 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleAddAppointment(ActionEvent actionEvent) {
-
-        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentView.fxml",
+        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentDetailView.fxml",
                 "PhysioCare - New Appointment");
 
         if (stage != null) {
-            UpcomingAppointmentsController controller = (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
+            AppointmentDetailViewController controller = (AppointmentDetailViewController) stage.getScene().getRoot().getUserData();
             controller.setShowRecord(RecordShowPatient);
             controller.setAddRecord(true);
+            controller.setIsFutureAppointment(true);
             controller.postInit();
             stage.showAndWait();
             getAppointmentsPatient();
         }
-    }
-
-    public void handleEditAppointment(ActionEvent actionEvent) {
     }
 
     public void handleDeleteAppointment(ActionEvent actionEvent) {
@@ -481,18 +508,26 @@ public class PatientDetailViewController implements Initializable {
         MessageUtils.showConfirmation("Delete Appointment", message, "Delete Appointmet").showAndWait()
                 .ifPresent(response -> {
                     if (response == ButtonType.OK) {
-                        DeleteAppointment();
+                        DeleteAppointment(true);
                     }
                 });
     }
 
-    private void DeleteAppointment() {
-        AppointmentsService.deleteAppointment(RecordShowPatient, currentAppointmentUpcoming).thenAccept(resp ->
+    private void DeleteAppointment(boolean isFuture) {
+        Appointment appointmentDelete = isFuture ? currentAppointmentUpcoming : currentAppointmentHistory;
+
+        AppointmentsService.deleteAppointment(RecordShowPatient, appointmentDelete ).thenAccept(resp ->
                 Platform.runLater(() -> {
                     if (resp != null && resp.isOk()) {
                         MessageUtils.showMessage("Success", "Appointment deleted successfully");
                         getAppointmentsPatient();
-                        btnDeleteAppointment.setDisable(true);
+                        if(isFuture){
+                            btnDeleteAppointment.setDisable(true);
+                            currentAppointmentUpcoming = null;
+                        }else {
+                            btnDeleteHistory.setDisable(true);
+                            currentAppointmentHistory = null;
+                        }
                     }
                 })).exceptionally(ex -> {
             ex.printStackTrace();
@@ -502,12 +537,31 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleAddHistory(ActionEvent actionEvent) {
-    }
+        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/appointment/AppointmentDetailView.fxml",
+                "PhysioCare - New Appointment");
 
-    public void handleEditHistory(ActionEvent actionEvent) {
+        if (stage != null) {
+            AppointmentDetailViewController controller = (AppointmentDetailViewController) stage.getScene().getRoot().getUserData();
+            controller.setShowRecord(RecordShowPatient);
+            controller.setAddRecord(true);
+            controller.setIsFutureAppointment(false);
+            controller.postInit();
+            stage.showAndWait();
+            getAppointmentsPatient();
+        }
     }
 
     public void handleDeleteHistory(ActionEvent actionEvent) {
+        if(RecordShowPatient == null && currentAppointmentUpcoming == null ) return;
+
+        String message = "Are you sure want to delete this appointment?";
+
+        MessageUtils.showConfirmation("Delete Appointment", message, "Delete Appointmet").showAndWait()
+                .ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        DeleteAppointment(false);
+                    }
+                });
     }
 
     public void handleSave(ActionEvent actionEvent) {

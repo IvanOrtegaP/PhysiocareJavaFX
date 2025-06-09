@@ -57,6 +57,16 @@ public class Appointment {
         this.observations = observations;
     }
 
+    public Appointment(String id, Date date, Physio physio, String diagnosis, String treatment, String observations, String confirm) {
+        this.id = id;
+        this.date = date;
+        this.physio = physio;
+        this.diagnosis = diagnosis;
+        this.treatment = treatment;
+        this.observations = observations;
+        this.confirm = confirm;
+    }
+
     public String getId() {
         return id;
     }

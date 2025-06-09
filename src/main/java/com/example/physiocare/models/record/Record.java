@@ -18,8 +18,6 @@ public class Record {
 
     }
 
-
-
     public Record(Patient patient, String medicalRecord, List<Appointment> appointments) {
         this.patient = patient;
         this.medicalRecord = medicalRecord;

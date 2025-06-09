@@ -2,7 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.DialogPane?>
 <?import javafx.scene.control.Label?>
@@ -13,9 +13,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.ChoiceBox?>
-<DialogPane fx:id="dialogPane" prefHeight="453.0" prefWidth="682.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.physiocare.controller.appointments.UpcomingAppointmentsController">
+<DialogPane fx:id="dialogPane" prefHeight="453.0" prefWidth="682.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.physiocare.controller.appointments.AppointmentDetailViewController">
 
     <header>
         <Label style="-fx-font-weight: bold; -fx-font-size: 16;" text="APPOINTMENT INFORMATION">
@@ -74,6 +72,11 @@
                         <Insets />
                     </opaqueInsets>
                 </Button>
+            <Button fx:id="buttEdit" mnemonicParsing="false" onAction="#handleEdit" text="Edit">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Button>
                 <Button fx:id="buttDelete" mnemonicParsing="false" onAction="#handleDelete" text="Delete">
                     <HBox.margin>
                         <Insets left="20.0" />
@@ -82,7 +85,7 @@
                         <Insets />
                     </opaqueInsets>
                 </Button>
-                <Button fx:id="ButtSave" mnemonicParsing="false" onAction="#handleSave" text="Save">
+                <Button fx:id="buttSave" mnemonicParsing="false" onAction="#handleSave" text="Save">
                     <HBox.margin>
                         <Insets left="20.0" />
                     </HBox.margin>

@@ -101,9 +101,7 @@
                     </padding>
 
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <TextField fx:id="txtSearchUpcoming" promptText="Search appointments..." />
                         <Button fx:id="btnAddAppointment" onAction="#handleAddAppointment" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Add" />
-                        <Button fx:id="btnEditAppointment" onAction="#handleEditAppointment" style="-fx-background-color: #2196F3; -fx-text-fill: white;" text="Edit" />
                         <Button fx:id="btnDeleteAppointment" onAction="#handleDeleteAppointment" style="-fx-background-color: #c0392b; -fx-text-fill: white;" text="Delete" />
                     </HBox>
 
@@ -126,9 +124,7 @@
                     </padding>
 
                     <HBox alignment="CENTER_LEFT" spacing="10">
-                        <TextField fx:id="txtSearchHistory" promptText="Search history..." />
                         <Button fx:id="btnAddHistory" onAction="#handleAddHistory" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Add" />
-                        <Button fx:id="btnEditHistory" onAction="#handleEditHistory" style="-fx-background-color: #2196F3; -fx-text-fill: white;" text="Edit" />
                         <Button fx:id="btnDeleteHistory" onAction="#handleDeleteHistory" style="-fx-background-color: #c0392b; -fx-text-fill: white;" text="Delete" />
                     </HBox>
 

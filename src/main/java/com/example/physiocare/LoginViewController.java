@@ -68,12 +68,4 @@ public class LoginViewController {
                     return null;
                 });
     }
-
-    private void loadMainView() throws IOException {
-        Stage stage = (Stage) txtUsername.getScene().getWindow();
-        Parent root = FXMLLoader.load(getClass().getResource("main-view.fxml"));
-        stage.setScene(new Scene(root));
-        stage.setTitle("PhysioCare - Main Menu");
-        stage.show();
-    }
 }
