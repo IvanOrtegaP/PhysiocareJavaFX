@@ -1,8 +1,8 @@
 package com.example.physiocare.controller.physios;
 
-import com.example.physiocare.models.appointment.AppoinmentListResponse;
-import com.example.physiocare.models.patient.PatientMoreInfoResponse;
-import com.example.physiocare.models.physio.*;
+import com.example.physiocare.models.physio.Physio;
+import com.example.physiocare.services.AppointmentsService;
+import com.example.physiocare.services.PhysiosService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
@@ -21,7 +21,6 @@ import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
 
 public class PhysiosViewController implements Initializable {
     private final Gson gson = new Gson();
@@ -47,20 +46,14 @@ public class PhysiosViewController implements Initializable {
     }
 
     private void loadPhysios(String searchQuery) {
-        String url = ServiceUtils.SERVER + (searchQuery != null && !searchQuery.isEmpty()
-                ? "/physios/find?search=" + searchQuery
-                : "/physios");
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
-            System.out.println("DEBUG - Respuesta JSON: " + json);
-            return gson.fromJson(json, PhysioListResponse.class);
-        }).thenAccept(response -> Platform.runLater(() -> {
-            if (response == null || !response.isOk()) {
+        PhysiosService.getPhysios(searchQuery).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp == null || !resp.isOk()) {
                 System.out.println("No se encontraron pacientes o hubo un error");
                 physios.clear();
                 MessageUtils.showError("Error", "The physio list could not be loaded or no results were found");
             } else {
-                System.out.println(response.getPhysios().size());
-                physios.setAll(response.getPhysios());
+                System.out.println(resp.getPhysios().size());
+                physios.setAll(resp.getPhysios());
                 clearSelection();
             }
         })).exceptionally(ex -> {
@@ -96,25 +89,30 @@ public class PhysiosViewController implements Initializable {
             TableRow<Physio> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && (!row.isEmpty())) {
-                    getPhysioId().thenAccept(physio -> Platform.runLater(() -> {
-                        if(physio != null){
+                    PhysiosService.getPhysioId(curretPhysio).thenAccept(resp -> Platform.runLater(() -> {
+                        if (resp != null && resp.isOk() && resp.getPhysio() != null) {
                             Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/physios/PhysiosDetailView.fxml",
                                     "PhysioCare - Physio Details");
 
                             if (stage != null) {
                                 PhysiosDetailViewController controller =
                                         (PhysiosDetailViewController) stage.getScene().getRoot().getUserData();
-                                controller.setShowPhysioMoreInfo(physio);
+                                controller.setShowPhysioMoreInfo(resp.getPhysio());
                                 controller.postInit();
 
                                 stage.setOnHidden(windows -> loadPhysios());
                                 stage.showAndWait();
                             }
-                        }else {
-                            MessageUtils.showError("Error to found physio" ,
+                        } else {
+                            MessageUtils.showError("Error to found physio",
                                     "The physio selected not found or error occurred");
                         }
-                    }));
+                    })).exceptionally(ex -> {
+                        System.out.println(ex.getMessage());
+                        Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+                        ex.printStackTrace();
+                        return null;
+                    });
                 }
             });
             return row;
@@ -122,33 +120,9 @@ public class PhysiosViewController implements Initializable {
 
     }
 
-    private CompletableFuture<PhysioMoreInfo> getPhysioId(){
-        String url = ServiceUtils.SERVER + "/physios/" + curretPhysio.getId();
-
-        return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
-            System.out.println("DEBUG - FIND ID Physio Respuesta JSON:" + json);
-            PhysioMoreInfoResponse resp = gson.fromJson(json, PhysioMoreInfoResponse.class);
-            if(resp != null && resp.isOk() && resp.getPhysio() != null){
-                return resp.getPhysio();
-            }else {
-                return null;
-            }
-        }).exceptionally(ex -> {
-            System.out.println(ex.getMessage());
-            Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
-            ex.printStackTrace();
-            return  null;
-        });
-    }
-
     private void DeletePhysio() {
-        String url = ServiceUtils.SERVER + "/physios/" + curretPhysio.getId();
-
-        ServiceUtils.getResponseAsync(url, null, "DELETE").thenApply(json -> {
-            System.out.println("DEBUG DELETE - Respuesta JSON: " + json);
-            return gson.fromJson(json, PhysioResponse.class);
-        }).thenAccept(response -> Platform.runLater(() -> {
-            if (response != null && response.isOk()) {
+        PhysiosService.DeletePhysio(curretPhysio).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp != null && resp.isOk()) {
                 MessageUtils.showMessage("Success", "Physio deleted successfully");
                 loadPhysios();
             } else {
@@ -157,9 +131,7 @@ public class PhysiosViewController implements Initializable {
             }
         })).exceptionally(ex -> {
             ex.printStackTrace();
-            Platform.runLater(() ->
-                    MessageUtils.showError("Error deleting patient", ex.getLocalizedMessage()));
-
+            Platform.runLater(() -> MessageUtils.showError("Error deleting patient", ex.getMessage()));
             return null;
         });
     }
@@ -181,18 +153,14 @@ public class PhysiosViewController implements Initializable {
     }
 
     public void handleConfirmAppointments(ActionEvent actionEvent) {
-        String url = ServiceUtils.SERVER + "/records/appointments/unconfirmed";
-
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
-                AppoinmentListResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-
-            if (response == null || !response.isOk()) {
+        AppointmentsService.getUnconfirmedAppointments(null).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp == null || !resp.isOk()) {
                 System.out.println("No se encontraron pacientes o hubo un error");
                 MessageUtils.showError("Error", "The physio list could not be loaded or no results were found");
             } else {
                 ScreenUtils.loadViewModal("/com/example/physiocare/appointment/ConfirmAppointmentView.fxml",
                         "PhysioCare - Appointments Confirm");
-                System.out.println(response.getResult().size());
+                System.out.println(resp.getResult().size());
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));

@@ -190,6 +190,7 @@ public class PatientDetailViewController implements Initializable {
                         UpcomingAppointmentsController controller =
                                 (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
                         controller.setShowRecord(RecordShowPatient);
+                        controller.setShowAppointment(row.getItem());
                         controller.setAddRecord(true);
                         controller.postInit();
                         stage.showAndWait();

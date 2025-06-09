@@ -23,4 +23,5 @@ module com.example.physiocare {
     opens com.example.physiocare.models.user;
     opens com.example.physiocare.utils;
     exports com.example.physiocare;
+    opens com.example.physiocare.services;
 }

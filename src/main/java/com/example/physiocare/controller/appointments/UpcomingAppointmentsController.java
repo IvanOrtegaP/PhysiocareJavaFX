@@ -1,10 +1,10 @@
 package com.example.physiocare.controller.appointments;
 
-import com.example.physiocare.models.appointment.AppointmentResponse;
+import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.physio.PhysioListResponse;
-import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.record.Record;
+import com.example.physiocare.services.AppointmentsService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
@@ -18,9 +18,13 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.ResourceBundle;
 
 public class UpcomingAppointmentsController implements Initializable {
+    private final List<String> hoursList = List.of("09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00");
+    private final Gson gson = new Gson();
     public DatePicker dpDate;
     public ChoiceBox<String> cbTime;
     public ChoiceBox<Physio> cbPhysio;
@@ -37,19 +41,15 @@ public class UpcomingAppointmentsController implements Initializable {
     public Label lblDiagnosis;
     public Label lblTreatment;
     public Label lblObservations;
-
     private Record showRecord;
     private Appointment showAppointment;
     private boolean addRecord = false;
-    private final List<String> hoursList = List.of("09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00");
 
-    private Gson gson = new Gson();
-
-    public void setAddRecord(boolean add){
+    public void setAddRecord(boolean add) {
         this.addRecord = add;
     }
 
-    public void setShowAppointment(Appointment showAppointment){
+    public void setShowAppointment(Appointment showAppointment) {
         this.showAppointment = showAppointment;
     }
 
@@ -62,14 +62,14 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
 
-    public void postInit(){
+    public void postInit() {
         System.out.println(addRecord);
-        if(addRecord){
+        if (addRecord) {
             hideFielsds();
         }
     }
 
-    private void hideFielsds(){
+    private void hideFielsds() {
         taDiagnosis.setDisable(true);
         taDiagnosis.setVisible(false);
         lblDiagnosis.setVisible(false);
@@ -84,7 +84,7 @@ public class UpcomingAppointmentsController implements Initializable {
         lblTreatment.setVisible(false);
     }
 
-    private void PopulateForm(){
+    private void PopulateForm() {
 
     }
 
@@ -106,29 +106,23 @@ public class UpcomingAppointmentsController implements Initializable {
 
     public void handleSave() {
 
-        if(!validateForm()) return;
-
-        String url = ServiceUtils.SERVER + "/records/" + showRecord.getId() + "/appointments";
+        if (!validateForm()) return;
 
         Date date = CreateDate();
         Physio selectedPhysio = cbPhysio.getSelectionModel().getSelectedItem();
 
         Appointment appointment = new Appointment(date, selectedPhysio, "pending");
-        String requestAppoinment = gson.toJson(appointment);
 
-        System.out.println(requestAppoinment);
-
-        ServiceUtils.getResponseAsync(url, requestAppoinment, "POST").thenApply(json -> gson.fromJson(json,
-                AppointmentResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-
-            if (response == null || !response.isOk()) {
-                System.out.println("No se encontraron los physios o hubo un error");
-                MessageUtils.showError("Error", "The physios not found");
-            } else {
-                MessageUtils.showMessage("Insert is sutesful" , "La insercion es correcta");
-                ((Stage) buttClose.getScene().getWindow()).close();
-            }
-        })).exceptionally(ex -> {
+        AppointmentsService.saveAppointment(showRecord, appointment).thenAccept(resp ->
+                Platform.runLater(() -> {
+                    if (resp == null || !resp.isOk()) {
+                        System.out.println("No se encontraron los physios o hubo un error");
+                        MessageUtils.showError("Error", "The physios not found");
+                    } else {
+                        MessageUtils.showMessage("Insert is sutesful", "La insercion es correcta");
+                        ((Stage) buttClose.getScene().getWindow()).close();
+                    }
+                })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
             return null;
         });
@@ -145,7 +139,7 @@ public class UpcomingAppointmentsController implements Initializable {
                 MessageUtils.showError("Error", "The physios not found");
             } else {
                 cbPhysio.setItems(FXCollections.observableList(response.getPhysios()));
-                if(!response.getPhysios().isEmpty())
+                if (!response.getPhysios().isEmpty())
                     cbPhysio.getSelectionModel().select(response.getPhysios().getFirst());
             }
         })).exceptionally(ex -> {
@@ -155,33 +149,31 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
     public void handleDelete() {
-        if(showAppointment == null && showRecord == null) return;
+        if (showAppointment == null && showRecord == null) return;
 
         String message = "Are you sure want to delete this appointment?";
 
-        MessageUtils.showConfirmation("Delete Appointment", message , "Delete Appointmet").showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                DelteApponintment();
-            }
-        });
+        MessageUtils.showConfirmation("Delete Appointment", message, "Delete Appointmet").showAndWait()
+                .ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        DeleteAppointment();
+                        ((Stage) buttClose.getScene().getWindow()).close();
+                    }
+                });
     }
 
-    private void DelteApponintment(){
-        String url = ServiceUtils.SERVER + "/records/" + showRecord.getId() + "/appointments/" + showAppointment.getId();
-
-        ServiceUtils.getResponseAsync(url, null, "DELETE")
-                .thenApply(json -> {
-                    System.out.println("Debug DELETE APPOINTMENT : " + json);
-                    return gson.fromJson(json, AppointmentResponse.class);
-                }).thenAccept(resp -> Platform.runLater(() -> {
-                    if(resp != null && resp.isOk()){
+    private void DeleteAppointment() {
+        AppointmentsService.deleteAppointment(showRecord, showAppointment).thenAccept(resp ->
+                Platform.runLater(() -> {
+                    if (resp != null && resp.isOk()) {
                         MessageUtils.showMessage("Success", "Appointment deleted successfully");
                         ((Stage) buttClose.getScene().getWindow()).close();
                     }
                 })).exceptionally(ex -> {
-                    Platform.runLater(() -> MessageUtils.showError("Error deleting appointment", ex.getLocalizedMessage()));
-                    return null;
-                });
+            ex.printStackTrace();
+            Platform.runLater(() -> MessageUtils.showError("Error deleting appointment", ex.getLocalizedMessage()));
+            return null;
+        });
     }
 
     public void handleClose() {
@@ -194,17 +186,17 @@ public class UpcomingAppointmentsController implements Initializable {
             return false;
         }
 
-        if(dpDate.getValue().isBefore(LocalDate.now())){
+        if (dpDate.getValue().isBefore(LocalDate.now())) {
             MessageUtils.showError("Validation Error", "The date must be greater than today's date.");
             return false;
         }
 
-        if(cbPhysio.getSelectionModel().getSelectedItem() == null){
+        if (cbPhysio.getSelectionModel().getSelectedItem() == null) {
             MessageUtils.showError("Validation Error", "Error you must select a physio");
             return false;
         }
 
-        if(cbTime.getSelectionModel().getSelectedItem() == null){
+        if (cbTime.getSelectionModel().getSelectedItem() == null) {
             MessageUtils.showError("Validation Error", "Error you must select a time the date");
             return false;
         }

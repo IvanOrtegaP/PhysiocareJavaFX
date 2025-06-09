@@ -1,10 +1,13 @@
 package com.example.physiocare.controller.physios;
 
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.patient.PatientResponse;
+import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.physio.PhysioMoreInfo;
 import com.example.physiocare.models.physio.PhysioMoreInfoResponse;
 import com.example.physiocare.models.physio.PhysioResponse;
 import com.example.physiocare.models.user.User;
+import com.example.physiocare.services.PhysiosService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ServiceUtils;
 import com.example.physiocare.utils.ValidateUtils;
@@ -155,22 +158,15 @@ public class PhysiosDetailViewController implements Initializable {
     private void EditPhysio() {
         if(!validateForm()) return;
 
-        String url = ServiceUtils.SERVER + "/physios/" + showPhysioMoreInfo.getId();
-
         PhysioMoreInfo physioMoreInfo = getShowPhysioMoreInfo();
 
-        String PhysioJson = gson.toJson(physioMoreInfo);
-
-        ServiceUtils.getResponseAsync(url, PhysioJson, "PUT").thenApply(json -> {
-            System.out.println("DEBUG- PHYSIO PUT JSON : " + json);
-            return gson.fromJson(json, PhysioMoreInfoResponse.class);
-        }).thenAccept(resp -> Platform.runLater(() -> {
+        PhysiosService.putPhysio(physioMoreInfo).thenAccept(resp -> Platform.runLater(() -> {
             if(resp != null && resp.isOk()){
                 showPhysioMoreInfo = resp.getPhysio();
                 populateForm();
                 DisableForm(true);
             }else {
-                String error = Optional.ofNullable(resp.getErrorMessage()).orElse("Unknown error");
+                String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
                 MessageUtils.showError("Error update physio", error);
             }
         })).exceptionally(ex -> {
@@ -179,26 +175,18 @@ public class PhysiosDetailViewController implements Initializable {
             MessageUtils.showError("Error update physio", ex.getMessage());
             return null;
         });
-
     }
 
     private void savePhysio() {
         if(!validateForm()) return;
 
-        String url = ServiceUtils.SERVER + "/physios";
-
         PhysioMoreInfo physioMoreInfo = getShowPhysioMoreInfo();
 
-        String PhysioJson = gson.toJson(physioMoreInfo);
-
-        ServiceUtils.getResponseAsync(url, PhysioJson, "POST").thenApply(json -> {
-            System.out.println("DEBUG - PHYSIO POST JSON : " +json );
-            return gson.fromJson(json, PhysioResponse.class);
-        }).thenAccept(resp -> Platform.runLater(() -> {
+        PhysiosService.savePhysio(physioMoreInfo).thenAccept(resp -> Platform.runLater(() -> {
             if(resp != null && resp.isOk()){
                 ((Stage) btnClose.getScene().getWindow()).close();
             }else {
-                String error = Optional.ofNullable(resp.getErrorMessage()).orElse("Unknown error");
+                String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
                 MessageUtils.showError("Error post physio", error);
             }
         })).exceptionally(ex -> {
@@ -280,7 +268,6 @@ public class PhysiosDetailViewController implements Initializable {
     public void handleEdit(ActionEvent actionEvent) {
         DisableForm(false);
         DisableButtons();
-
     }
 
     public void handleDelete(ActionEvent actionEvent) {
@@ -298,20 +285,19 @@ public class PhysiosDetailViewController implements Initializable {
     }
 
     private void DeletePhysio() {
-        String url = ServiceUtils.SERVER + "/physios/" + showPhysioMoreInfo.getId();
+        Physio physioShow = new Physio();
+        physioShow.setId(showPhysioMoreInfo.getId());
 
-        ServiceUtils.getResponseAsync(url, null, "DELETE")
-                .thenApply(json -> gson.fromJson(json, PhysioResponse.class))
-                .thenAccept(responseApi -> Platform.runLater(() -> {
-                    if (responseApi != null && responseApi.isOk()) {
-                        MessageUtils.showMessage("Success", "Physio deleted successfully");
-                    } else {
-                        MessageUtils.showError("Error deleting physio", "The physio to be eliminated is not found");
-                    }
-                })).exceptionally(ex -> {
-                    Platform.runLater(() -> MessageUtils.showError("Error deleting physio", ex.getLocalizedMessage()));
-                    return null;
-                });
+        PhysiosService.DeletePhysio(physioShow).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp != null && resp.isOk()) {
+                MessageUtils.showMessage("Success", "Physio deleted successfully");
+            } else {
+                MessageUtils.showError("Error deleting physio", "The physio to be eliminated is not found");
+            }
+        })).exceptionally(ex -> {
+            Platform.runLater(() -> MessageUtils.showError("Error deleting physio", ex.getLocalizedMessage()));
+            return null;
+        });
     }
 
     public void handleSave(ActionEvent actionEvent) {
