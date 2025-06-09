@@ -1,17 +1,12 @@
 package com.example.physiocare.controller.physios;
 
 import com.example.physiocare.models.BaseResponse;
-import com.example.physiocare.models.patient.PatientResponse;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.physio.PhysioMoreInfo;
-import com.example.physiocare.models.physio.PhysioMoreInfoResponse;
-import com.example.physiocare.models.physio.PhysioResponse;
 import com.example.physiocare.models.user.User;
 import com.example.physiocare.services.PhysiosService;
 import com.example.physiocare.utils.MessageUtils;
-import com.example.physiocare.utils.ServiceUtils;
 import com.example.physiocare.utils.ValidateUtils;
-import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
@@ -25,8 +20,6 @@ import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
 public class PhysiosDetailViewController implements Initializable {
-    private final Gson gson = new Gson();
-
     public TextField txtName;
     public TextField txtSurname;
     public ChoiceBox<Specialties> cbSpecialty;
@@ -41,15 +34,15 @@ public class PhysiosDetailViewController implements Initializable {
     public VBox VBoxMain;
     public Label lblPassword;
 
-    private Boolean addPhysio = false;
+    private boolean addPhysio = false;
     private PhysioMoreInfo showPhysioMoreInfo;
 
     public void setShowPhysioMoreInfo(PhysioMoreInfo showPhysioMoreInfo) {
         this.showPhysioMoreInfo = showPhysioMoreInfo;
     }
 
-    public void setAddPhysio(Boolean add){
-        this.addPhysio = (add != null ? add : false) ;
+    public void setAddPhysio(boolean add){
+        this.addPhysio = add;
     }
 
     public enum Specialties {
@@ -61,7 +54,7 @@ public class PhysiosDetailViewController implements Initializable {
             return switch (this) {
                 case SPORTS -> "Sports";
                 case NEUROLOGICAL -> "Neurological";
-                case PEDIATIC -> "Pediatic";
+                case PEDIATIC -> "Pediatric";
                 case GERIATRIC -> "Geriatric";
                 case ONCOLOGICAL -> "Oncological";
             };
@@ -83,6 +76,12 @@ public class PhysiosDetailViewController implements Initializable {
             txtName.setText((showPhysioMoreInfo.getName() != null ? showPhysioMoreInfo.getName() : "No tiene nombre asignado"));
             txtSurname.setText((showPhysioMoreInfo.getSurname() != null ? showPhysioMoreInfo.getSurname() : "No tiene apellido asignado"));
             txtLicenseNumber.setText(showPhysioMoreInfo.getLicenseNumber() != null ? showPhysioMoreInfo.getLicenseNumber() : "No tiene license number asignado");
+
+            try {
+                cbSpecialty.setValue(Specialties.valueOf(showPhysioMoreInfo.getSpecialty().toUpperCase()));
+            } catch (IllegalArgumentException | NullPointerException e) {
+                cbSpecialty.setValue(null);
+            }
 
             Optional.ofNullable(showPhysioMoreInfo.getUser()).ifPresentOrElse(user -> {
                 txtUsername.setText(Optional.ofNullable(user.getLogin()).orElse("No tiene nombre de usuario asignado"));
@@ -165,6 +164,7 @@ public class PhysiosDetailViewController implements Initializable {
                 showPhysioMoreInfo = resp.getPhysio();
                 populateForm();
                 DisableForm(true);
+                DisableButtons();
             }else {
                 String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
                 MessageUtils.showError("Error update physio", error);
@@ -184,6 +184,7 @@ public class PhysiosDetailViewController implements Initializable {
 
         PhysiosService.savePhysio(physioMoreInfo).thenAccept(resp -> Platform.runLater(() -> {
             if(resp != null && resp.isOk()){
+                MessageUtils.showMessage("Save Physio" , "The physio saved successfully");
                 ((Stage) btnClose.getScene().getWindow()).close();
             }else {
                 String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
@@ -262,7 +263,13 @@ public class PhysiosDetailViewController implements Initializable {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ((Stage) btnClose.getScene().getWindow()).close();
+        if(btnSave.isVisible() && !addPhysio){
+            populateForm();
+            DisableButtons();
+            DisableForm(true);
+        }else {
+            ((Stage) btnClose.getScene().getWindow()).close();
+        }
     }
 
     public void handleEdit(ActionEvent actionEvent) {
@@ -305,7 +312,6 @@ public class PhysiosDetailViewController implements Initializable {
             savePhysio();
         }else if (showPhysioMoreInfo != null) {
             EditPhysio();
-            DisableButtons();
         }
     }
 }

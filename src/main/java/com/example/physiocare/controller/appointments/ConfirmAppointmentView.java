@@ -3,7 +3,6 @@ package com.example.physiocare.controller.appointments;
 import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.services.AppointmentsService;
 import com.example.physiocare.utils.MessageUtils;
-import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +16,6 @@ import javafx.stage.Stage;
 
 public class ConfirmAppointmentView {
     private final ObservableList<Appointment> appointments = FXCollections.observableArrayList();
-    private final Gson gson = new Gson();
     @FXML
     public TextField txtSearch;
     @FXML

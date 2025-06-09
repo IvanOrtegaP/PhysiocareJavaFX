@@ -27,8 +27,8 @@ module com.example.physiocare {
     opens com.example.physiocare.utils;
     exports com.example.physiocare;
     opens com.example.physiocare.services;
-    exports com.example.physiocare.controller;
-    opens com.example.physiocare.controller to javafx.fxml;
+//    exports com.example.physiocare.controller;
+//    opens com.example.physiocare.controller to javafx.fxml;
     exports com.example.physiocare.controller.options;
     opens com.example.physiocare.controller.options to javafx.fxml;
 }

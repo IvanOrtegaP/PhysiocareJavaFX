@@ -111,11 +111,17 @@ public class ServiceUtils {
                 wr.flush();
                 wr.close();
             }
+            int statusCode = conn.getResponseCode();
+            InputStream input;
 
+            if(statusCode >= 200 && statusCode < 300){
+                input = conn.getInputStream();
+            }else {
+                input = conn.getErrorStream();
+            }
             String charset = getCharset(conn.getHeaderField("Content-Type"));
 
             if (charset != null) {
-                InputStream input = conn.getInputStream();
                 if ("gzip".equals(conn.getContentEncoding())) {
                     input = new GZIPInputStream(input);
                 }

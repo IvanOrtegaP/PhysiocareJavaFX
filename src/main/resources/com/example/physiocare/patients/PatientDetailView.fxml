@@ -67,7 +67,7 @@
                             <Label text="Username:" />
                             <TextField fx:id="txtUsername" GridPane.columnIndex="1" />
 
-                            <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                            <Label fx:id="lblPassword" text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
                             <PasswordField fx:id="pfPassword" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
                             <Label text="Email:" GridPane.rowIndex="2" />

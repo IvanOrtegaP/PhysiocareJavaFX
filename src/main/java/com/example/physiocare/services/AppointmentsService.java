@@ -15,7 +15,6 @@ public class AppointmentsService {
     private static final String URL_RECORDS = ServiceUtils.SERVER + "/records/";
     private static final Gson gson = new Gson();
 
-
     public static CompletableFuture<AppointmentResponse> saveAppointment(Record record, Appointment appointment) {
 
         if (record == null || appointment == null) {

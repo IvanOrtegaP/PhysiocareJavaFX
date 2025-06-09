@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public class PhysiosViewController implements Initializable {
-    private final Gson gson = new Gson();
     private final ObservableList<Physio> physios = FXCollections.observableArrayList();
     public Label lblLoggedUser;
     public TextField txtSearch;

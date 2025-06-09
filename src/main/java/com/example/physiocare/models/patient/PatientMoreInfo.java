@@ -54,4 +54,6 @@ public class PatientMoreInfo extends PatientBase {
     public void setUser(User user) {
         this.user = user;
     }
+
+
 }

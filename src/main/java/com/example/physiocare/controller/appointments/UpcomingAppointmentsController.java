@@ -2,11 +2,10 @@ package com.example.physiocare.controller.appointments;
 
 import com.example.physiocare.models.appointment.Appointment;
 import com.example.physiocare.models.physio.Physio;
-import com.example.physiocare.models.physio.PhysioListResponse;
 import com.example.physiocare.models.record.Record;
 import com.example.physiocare.services.AppointmentsService;
+import com.example.physiocare.services.PhysiosService;
 import com.example.physiocare.utils.MessageUtils;
-import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -15,15 +14,18 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class UpcomingAppointmentsController implements Initializable {
     private final List<String> hoursList = List.of("09:00", "10:00", "11:00", "12:00", "13:00", "15:00", "16:00");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     private final Gson gson = new Gson();
     public DatePicker dpDate;
     public ChoiceBox<String> cbTime;
@@ -63,9 +65,10 @@ public class UpcomingAppointmentsController implements Initializable {
 
 
     public void postInit() {
-        System.out.println(addRecord);
         if (addRecord) {
             hideFielsds();
+        } else if (showAppointment != null) {
+            PopulateForm();
         }
     }
 
@@ -85,7 +88,20 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
     private void PopulateForm() {
+        if(showAppointment != null){
+            taDiagnosis.setText((showAppointment.getDiagnosis() != null ? showAppointment.getDiagnosis() : "Has no assigned diagnosis"));
+            taTreatment.setText((showAppointment.getTreatment() != null ? showAppointment.getTreatment() : "Has no assigned treatment"));
+            taObservations.setText((showAppointment.getTreatment() != null ? showAppointment.getTreatment() : "Has no assigned observations"));
+            try{
+                LocalDateTime localDateTime = showAppointment.getDate().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime();
+                dpDate.setValue(localDateTime.toLocalDate());
+                cbTime.setValue(localDateTime.format(formatter));
 
+            }catch (IllegalArgumentException | NullPointerException e){
+                cbTime.setValue(null);
+            }
+        }
     }
 
     private Date CreateDate() {
@@ -129,18 +145,14 @@ public class UpcomingAppointmentsController implements Initializable {
     }
 
     private void GetPhysios() {
-
-        String url = ServiceUtils.SERVER + "/physios";
-
-        ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> gson.fromJson(json,
-                PhysioListResponse.class)).thenAccept(response -> Platform.runLater(() -> {
-            if (response == null || !response.isOk()) {
+        PhysiosService.getPhysios(null).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp == null || !resp.isOk()) {
                 System.out.println("No se encontraron los physios o hubo un error");
                 MessageUtils.showError("Error", "The physios not found");
             } else {
-                cbPhysio.setItems(FXCollections.observableList(response.getPhysios()));
-                if (!response.getPhysios().isEmpty())
-                    cbPhysio.getSelectionModel().select(response.getPhysios().getFirst());
+                cbPhysio.setItems(FXCollections.observableList(resp.getPhysios()));
+                if (!resp.getPhysios().isEmpty())
+                    cbPhysio.getSelectionModel().select(resp.getPhysios().getFirst());
             }
         })).exceptionally(ex -> {
             Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));

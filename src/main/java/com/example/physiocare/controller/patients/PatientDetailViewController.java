@@ -1,20 +1,19 @@
 package com.example.physiocare.controller.patients;
 
 import com.example.physiocare.controller.appointments.UpcomingAppointmentsController;
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.appointment.Appointment;
+import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.models.patient.PatientMoreInfo;
-import com.example.physiocare.models.patient.PatientMoreInfoResponse;
-import com.example.physiocare.models.patient.PatientResponse;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.models.record.Record;
-import com.example.physiocare.models.record.RecordResponse;
 import com.example.physiocare.models.user.User;
+import com.example.physiocare.services.AppointmentsService;
+import com.example.physiocare.services.PatientsService;
+import com.example.physiocare.services.RecordService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
-import com.example.physiocare.utils.ServiceUtils;
 import com.example.physiocare.utils.ValidateUtils;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -35,7 +34,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class PatientDetailViewController implements Initializable {
-    private final Gson gson = new Gson();
     private final SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
     private final SimpleDateFormat formatTime = new SimpleDateFormat("HH:mm");
     public TextField txtName;
@@ -57,7 +55,6 @@ public class PatientDetailViewController implements Initializable {
     public TableColumn<Appointment, Date> colDateUpcoming;
     public TableColumn<Appointment, Date> colTimeUpcoming;
     public TableColumn<Appointment, Physio> colPhysioNameUpcoming;
-    public TableColumn colReasonUpcoming;
     public TextField txtSearchHistory;
     public Button btnAddHistory;
     public Button btnEditHistory;
@@ -74,8 +71,9 @@ public class PatientDetailViewController implements Initializable {
     public Tab tabPatHistoryApp;
     public Tab tabPatUpcomingApp;
     public Tab tabPatInf;
+    public Label lblPassword;
     private Record RecordShowPatient;
-    private Boolean addPatient = false;
+    private boolean addPatient = false;
     private PatientMoreInfo showPatientMoreInfo;
     private Appointment currentAppointmentUpcoming;
 
@@ -92,10 +90,10 @@ public class PatientDetailViewController implements Initializable {
         borderPane.setUserData(this);
         setupTableHistory();
         setupTableUpcoming();
-        DisableForm(true);
         btnSave.setDisable(true);
         btnSave.setVisible(false);
         btnSave.setManaged(false);
+        btnDeleteAppointment.setDisable(true);
     }
 
     private void DisableForm(Boolean disable) {
@@ -113,16 +111,21 @@ public class PatientDetailViewController implements Initializable {
      * Funcion importante que se ejecuta despues del inicialize se ejecuata a mano.
      */
     public void postInit() {
-        if (!addPatient) {
-            if (showPatientMoreInfo != null) {
-                populateForm();
-                getAppointmentsPatient();
-            }
-        } else {
+        if (addPatient) {
             tabPane.getTabs().remove(tabPatUpcomingApp);
             tabPane.getTabs().remove(tabPatHistoryApp);
-            DisableForm(false);
             DisableButtons();
+        } else if(showPatientMoreInfo != null) {
+            DisableForm(true);
+            populateForm();
+            getAppointmentsPatient();
+
+            pfPassword.setDisable(true);
+            pfPassword.setManaged(false);
+            pfPassword.setVisible(false);
+            lblPassword.setDisable(true);
+            lblPassword.setManaged(false);
+            lblPassword.setVisible(false);
         }
     }
 
@@ -175,7 +178,7 @@ public class PatientDetailViewController implements Initializable {
                 (obs, oldSelection, newSelection) -> {
                     if(newSelection != null){
                         currentAppointmentUpcoming = newSelection;
-                        btnDelete.setDisable(false);
+                        btnDeleteAppointment.setDisable(false);
                     }
         });
 
@@ -191,10 +194,10 @@ public class PatientDetailViewController implements Initializable {
                                 (UpcomingAppointmentsController) stage.getScene().getRoot().getUserData();
                         controller.setShowRecord(RecordShowPatient);
                         controller.setShowAppointment(row.getItem());
-                        controller.setAddRecord(true);
                         controller.postInit();
+
+                        stage.setOnHidden(windows -> getAppointmentsPatient());
                         stage.showAndWait();
-                        getAppointmentsPatient();
                     }
                 }
             });
@@ -203,60 +206,38 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void getAppointmentsPatient() {
-        String url = ServiceUtils.SERVER + "/records/patient/" + showPatientMoreInfo.getId();
-        System.out.println("Fetching appointments from: " + url);
+        Patient showPatient = new Patient();
+        showPatient.setId(showPatientMoreInfo.getId());
 
-        ServiceUtils.getResponseAsync(url, null, "GET")
-                .thenApply(json -> {
-                    System.out.println("Raw JSON response: " + json);
-                    try {
-                        // First parse as JsonObject to handle the structure properly
-                        JsonObject jsonObject = gson.fromJson(json, JsonObject.class);
+        RecordService.getRecordPatient(showPatient).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp == null || !resp.isOk()) {
+                System.out.println("No patient records found or error in response");
+                MessageUtils.showError("Error", "No se encontró el historial del paciente");
+            } else {
+                System.out.println("Successfully retrieved patient records");
+                RecordShowPatient = resp.getResult();
 
-                        // Then convert to RecordResponse
-                        RecordResponse response = gson.fromJson(json, RecordResponse.class);
+                // Initialize appointments if null
+                if (RecordShowPatient.getAppointments() == null) {
+                    RecordShowPatient.setAppointments(new ArrayList<>());
+                }
 
-                        // If appointments is null in the response, initialize empty list
-                        if (response.getResult() != null && response.getResult().getAppointments() == null) {
-                            response.getResult().setAppointments(new ArrayList<>());
-                        }
-
-                        return response;
-                    } catch (Exception e) {
-                        System.err.println("Error parsing JSON: " + e.getMessage());
-                        throw new RuntimeException("Failed to parse patient records", e);
-                    }
-                })
-                .thenAccept(response -> Platform.runLater(() -> {
-                    if (response == null || !response.isOk()) {
-                        System.out.println("No patient records found or error in response");
-                        MessageUtils.showError("Error", "No se encontró el historial del paciente");
-                    } else {
-                        System.out.println("Successfully retrieved patient records");
-                        RecordShowPatient = response.getResult();
-
-                        // Initialize appointments if null
-                        if (RecordShowPatient.getAppointments() == null) {
-                            RecordShowPatient.setAppointments(new ArrayList<>());
-                        }
-
-                        tblHistory.setItems(FXCollections.observableList(RecordShowPatient.getAppointments()));
-                        PopulateTables();
-                    }
-                }))
-                .exceptionally(ex -> {
-                    System.err.println("Exception in getAppointmentsPatient: " + ex.getMessage());
-                    Platform.runLater(() -> {
-                        if (ex.getCause() instanceof JsonSyntaxException) {
-                            MessageUtils.showError("Error de formato", "Los datos del paciente tienen un formato incorrecto");
-                        } else {
-                            MessageUtils.showError("Error", "No se pudo cargar el historial del paciente: " +
-                                    (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()));
-                        }
-                    });
-                    ex.printStackTrace();
-                    return null;
-                });
+                tblHistory.setItems(FXCollections.observableList(RecordShowPatient.getAppointments()));
+                PopulateTables();
+            }
+        })).exceptionally(ex -> {
+            System.err.println("Exception in getAppointmentsPatient: " + ex.getMessage());
+            Platform.runLater(() -> {
+                if (ex.getCause() instanceof JsonSyntaxException) {
+                    MessageUtils.showError("Error de formato", "Los datos del paciente tienen un formato incorrecto");
+                } else {
+                    MessageUtils.showError("Error", "No se pudo cargar el historial del paciente: " +
+                            (ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage()));
+                }
+            });
+            ex.printStackTrace();
+            return null;
+        });
     }
 
     private void PopulateTables() {
@@ -295,45 +276,37 @@ public class PatientDetailViewController implements Initializable {
     }
 
     private void DeletePatient() {
-        String url = ServiceUtils.SERVER + "/patients/" + showPatientMoreInfo.getId();
+        Patient patientShow = new Patient();
+        patientShow.setId(showPatientMoreInfo.getId());
 
-        ServiceUtils.getResponseAsync(url, null, "DELETE")
-                .thenApply(json -> gson.fromJson(json, PatientResponse.class))
-                .thenAccept(responseApi -> Platform.runLater(() -> {
-                    if (responseApi != null && responseApi.isOk()) {
-                        MessageUtils.showMessage("Success", "Patient deleted successfully");
-                    } else {
-                        MessageUtils.showError("Error deleting patient", "The patient to be eliminated is not found");
-                    }
-                })).exceptionally(ex -> {
-                    Platform.runLater(() -> MessageUtils.showError("Error deleting patient", ex.getLocalizedMessage()));
-                    return null;
-                });
+        PatientsService.deletePatient(patientShow).thenAccept(resp -> Platform.runLater(() -> {
+            if (resp != null && resp.isOk()) {
+                MessageUtils.showMessage("Success", "Patient deleted successfully");
+            } else {
+                MessageUtils.showError("Error deleting patient", "The patient to be eliminated is not found");
+            }
+        })).exceptionally(ex -> {
+            Platform.runLater(() -> MessageUtils.showError("Error deleting patient", ex.getLocalizedMessage()));
+            return null;
+        });
     }
 
     private void EditPatient() {
         if (!validateForm()) return;
 
-        String url = ServiceUtils.SERVER + "/patients/" + showPatientMoreInfo.getId();
-
         Date date = Date.from(dpBirthDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 
         PatientMoreInfo patient = getPatientMoreInfo(date);
 
-        String PatientJson = gson.toJson(patient);
-
-        ServiceUtils.getResponseAsync(url, PatientJson, "PUT").thenApply(json -> {
-            System.out.println("DEBUG- PATIENT PUT JSON : " + json);
-            return gson.fromJson(json, PatientMoreInfoResponse.class);
-        }).thenAccept(resp -> Platform.runLater(() -> {
+        PatientsService.putPatient(patient).thenAccept(resp -> Platform.runLater(() -> {
             if (resp != null && resp.isOk()) {
                 showPatientMoreInfo = resp.getPatient();
                 populateForm();
                 DisableForm(true);
+                DisableButtons();
             } else {
-                System.out.println();
-                String errro = (resp.getErrorMessage() != null) ? resp.getErrorMessage() : "Unknown error";
-                MessageUtils.showError("Error update patient", errro);
+                String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
+                MessageUtils.showError("Error update patient", error);
             }
         })).exceptionally(ex -> {
             System.out.println(ex.getMessage());
@@ -346,23 +319,17 @@ public class PatientDetailViewController implements Initializable {
     private void savePatient() {
         if (!validateForm()) return;
 
-        String url = ServiceUtils.SERVER + "/patients";
-
         Date date = Date.from(dpBirthDate.getValue().atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
 
         PatientMoreInfo patient = getPatientMoreInfo(date);
 
-        String PatientJson = gson.toJson(patient);
-
-        ServiceUtils.getResponseAsync(url, PatientJson, "POST").thenApply(json -> {
-            System.out.println("DEBUG- PATIENT POST JSON : " + json);
-            return gson.fromJson(json, PatientResponse.class);
-        }).thenAccept(resp -> Platform.runLater(() -> {
+        PatientsService.savePatient(patient).thenAccept(resp -> Platform.runLater(() -> {
             if (resp != null && resp.isOk()) {
+                MessageUtils.showMessage("Save Patient" , "The patient saved successfully");
                 ((Stage) btnClose.getScene().getWindow()).close();
             } else {
-                String errro = (resp.getErrorMessage() != null) ? resp.getErrorMessage() : "Unknown error";
-                MessageUtils.showError("Error post patient", errro);
+                String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknown error");
+                MessageUtils.showError("Error post patient", error);
             }
         })).exceptionally(ex -> {
             System.out.println(ex.getMessage());
@@ -423,6 +390,12 @@ public class PatientDetailViewController implements Initializable {
             MessageUtils.showError("Validation Error", "Birth date is required");
             return false;
         }
+
+        if (dpBirthDate.getValue().isAfter(LocalDate.now())) {
+            MessageUtils.showError("Validation Error", "The date cannot be after today's date.");
+            return false;
+        }
+
         if (!ValidateUtils.validateNotEmpty(txtInsuranceNumber.getText())) {
             MessageUtils.showError("Validation Error", "Insurance number is required");
             return false;
@@ -473,7 +446,13 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ((Stage) btnClose.getScene().getWindow()).close();
+        if(btnSave.isVisible() && !addPatient){
+            populateForm();
+            DisableButtons();
+            DisableForm(true);
+        }else {
+            ((Stage) btnClose.getScene().getWindow()).close();
+        }
     }
 
     public void handleAddAppointment(ActionEvent actionEvent) {
@@ -495,6 +474,31 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleDeleteAppointment(ActionEvent actionEvent) {
+        if(RecordShowPatient == null && currentAppointmentUpcoming == null ) return;
+
+        String message = "Are you sure want to delete this appointment?";
+
+        MessageUtils.showConfirmation("Delete Appointment", message, "Delete Appointmet").showAndWait()
+                .ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        DeleteAppointment();
+                    }
+                });
+    }
+
+    private void DeleteAppointment() {
+        AppointmentsService.deleteAppointment(RecordShowPatient, currentAppointmentUpcoming).thenAccept(resp ->
+                Platform.runLater(() -> {
+                    if (resp != null && resp.isOk()) {
+                        MessageUtils.showMessage("Success", "Appointment deleted successfully");
+                        getAppointmentsPatient();
+                        btnDeleteAppointment.setDisable(true);
+                    }
+                })).exceptionally(ex -> {
+            ex.printStackTrace();
+            Platform.runLater(() -> MessageUtils.showError("Error deleting appointment", ex.getLocalizedMessage()));
+            return null;
+        });
     }
 
     public void handleAddHistory(ActionEvent actionEvent) {
@@ -507,14 +511,10 @@ public class PatientDetailViewController implements Initializable {
     }
 
     public void handleSave(ActionEvent actionEvent) {
-        if (!addPatient) {
-            if (showPatientMoreInfo != null) {
-                EditPatient();
-                DisableForm(false);
-                DisableButtons();
-            }
-        } else {
+        if (addPatient) {
             savePatient();
+        } else if(showPatientMoreInfo != null) {
+            EditPatient();
         }
     }
 }
