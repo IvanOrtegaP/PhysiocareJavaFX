@@ -56,6 +56,7 @@ public class UpcomingAppointmentsController implements Initializable {
     @FXML
     private Label lblObservations;
 
+
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(List.class, new PhysioListDeserializer())
             .create();
@@ -103,6 +104,12 @@ public class UpcomingAppointmentsController implements Initializable {
                 disableForm(false);
                 populateForm(appointment);
                 break;
+        }
+    }
+
+    public void postInit() {
+        if (addRecord) {
+            hideFields();
         }
     }
 
