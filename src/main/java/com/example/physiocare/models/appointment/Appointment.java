@@ -18,6 +18,7 @@ public class Appointment {
     private String recordId;
     private Patient patient;
     private String confirm;
+    private Integer rating;
 
     public Appointment(Date date, Physio physio) {
         this.date = date;
@@ -42,6 +43,15 @@ public class Appointment {
         this.id = id;
         this.date = date;
         this.physio = physio;
+        this.diagnosis = diagnosis;
+        this.treatment = treatment;
+        this.observations = observations;
+    }
+
+    public Appointment(Date date, Physio physio, Patient patient, String diagnosis, String treatment, String observations) {
+        this.date = date;
+        this.physio = physio;
+        this.patient = patient;
         this.diagnosis = diagnosis;
         this.treatment = treatment;
         this.observations = observations;
@@ -124,5 +134,13 @@ public class Appointment {
 
     public void setConfirm(String confirm) {
         this.confirm = confirm;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public void setRating(Integer rating) {
+        this.rating = rating;
     }
 }

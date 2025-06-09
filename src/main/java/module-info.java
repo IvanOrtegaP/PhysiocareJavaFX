@@ -6,6 +6,9 @@ module com.example.physiocare {
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
     requires org.kordamp.bootstrapfx.core;
+    requires layout;
+    requires kernel;
+    requires jsch;
 
     opens com.example.physiocare.models.auth to com.google.gson;
     opens com.example.physiocare.models.physio to javafx.base, com.google.gson;
@@ -24,4 +27,8 @@ module com.example.physiocare {
     opens com.example.physiocare.utils;
     exports com.example.physiocare;
     opens com.example.physiocare.services;
+    exports com.example.physiocare.controller;
+    opens com.example.physiocare.controller to javafx.fxml;
+    exports com.example.physiocare.controller.options;
+    opens com.example.physiocare.controller.options to javafx.fxml;
 }

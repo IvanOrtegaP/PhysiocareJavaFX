@@ -54,22 +54,25 @@ public class ScreenUtils {
         }
     }
 
-    public static Stage createViewModal(String view , String titleView){
+    public static Stage createViewModal(String view, String titleView) {
         Stage modalStage = new Stage();
-        try{
+        try {
             FXMLLoader loader = new FXMLLoader(Objects.requireNonNull(ScreenUtils.class.getResource(view)));
             Parent root = loader.load();
+
+            Object controller = loader.getController();
+            root.setUserData(controller);
 
             modalStage.setScene(new Scene(root));
             modalStage.initModality(Modality.APPLICATION_MODAL);
             modalStage.setTitle(titleView);
-            return  modalStage;
+            return modalStage;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-            MessageUtils.showError("Error to loading view" , e.getLocalizedMessage());
+            MessageUtils.showError("Error loading view", e.getLocalizedMessage());
         }
 
-        return  null;
+        return null;
     }
 }

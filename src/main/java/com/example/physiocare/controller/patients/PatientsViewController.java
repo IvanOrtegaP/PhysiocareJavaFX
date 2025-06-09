@@ -275,4 +275,9 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
             btnViewPhysios.setManaged(false);
         }
     }
+
+    public void handleViewOptions(ActionEvent actionEvent) {
+        ScreenUtils.loadViewModal("/com/example/physiocare/options-view.fxml", "PhysioCare - Options");
+
+    }
 }

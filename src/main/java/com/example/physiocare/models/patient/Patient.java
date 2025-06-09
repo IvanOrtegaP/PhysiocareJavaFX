@@ -10,6 +10,7 @@ public class Patient extends PatientBase {
     private String address;
     private String insuranceNumber;
     private String user;
+    private Record record;
 
     public Patient() {
         super();
@@ -47,7 +48,13 @@ public class Patient extends PatientBase {
         this.insuranceNumber = insuranceNumber;
     }
 
+    public Record getRecord() {
+        return record;
+    }
 
+    public void setRecord(Record record) {
+        this.record = record;
+    }
 
     public String getUser() {
         return user;
