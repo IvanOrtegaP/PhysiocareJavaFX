@@ -3,13 +3,13 @@ package com.example.physiocare.models.user;
 import com.example.physiocare.models.BaseResponse;
 
 public class UserResponse extends BaseResponse {
-    private User result;
+    private User user;
 
     public User getUser() {
-        return result;
+        return user;
     }
 
     public void setUser(User user) {
-        this.result = user;
+        this.user = user;
     }
 }

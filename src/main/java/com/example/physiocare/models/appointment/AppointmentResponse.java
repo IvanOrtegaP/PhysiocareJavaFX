@@ -10,7 +10,6 @@ public class AppointmentResponse extends BaseResponse {
     public Appointment getResult() {
         return result;
     }
-
     public void setResult(Appointment result) {
         this.result = result;
     }
