@@ -149,6 +149,8 @@ public class PhysiosViewController implements Initializable {
     }
 
     public void handleViewProfile(ActionEvent actionEvent) {
+        ScreenUtils.loadViewModal("/com/example/physiocare/user/UserProfileView.fxml",
+                "PhysioCare - User Profile");
     }
 
     public void handleConfirmAppointments(ActionEvent actionEvent) {

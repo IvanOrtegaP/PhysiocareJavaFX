@@ -1,8 +1,12 @@
 package com.example.physiocare.controller.patients;
 
+import com.example.physiocare.controller.users.UserProfileController;
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.patient.Patient;
 import com.example.physiocare.services.AppointmentsService;
 import com.example.physiocare.services.PatientsService;
+import com.example.physiocare.services.PhysiosService;
+import com.example.physiocare.services.UserService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.RoleAwareController;
 import com.example.physiocare.utils.ScreenUtils;
@@ -22,6 +26,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class PatientsViewController implements Initializable, RoleAwareController {
@@ -37,6 +42,7 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
     public TableColumn<Patient, String> colInsuranceNumber;
     public TableColumn<Patient, Date> colBirthDate;
     public Button btnViewPhysios;
+    public Button btnViewProfile;
     //Mete dilay a la busqueda por texto
     PauseTransition pause = new PauseTransition(Duration.millis(600));
     private Patient currentPatient = null;
@@ -150,13 +156,54 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
 
     }
 
-    private void ChangeButtons() {
-        btnViewPhysios.setVisible(!btnViewPhysios.isVisible());
-        btnViewPhysios.setManaged(!btnViewPhysios.isManaged());
-        btnViewPhysios.setDisable(!btnViewPhysios.isDisable());
-    }
-
     public void handleViewProfile(ActionEvent actionEvent) {
+        String rol = ServiceUtils.getRol();
+        if(rol != null){
+            if(rol.equals("physio")){
+                PhysiosService.PhysioProfileMe().thenAccept(resp -> Platform.runLater(() -> {
+                    if(resp != null && resp.isOk() && resp.getPhysio() != null){
+                        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/user/UserProfileView.fxml",
+                                "PhysioCare - User Profile");
+
+                        if(stage != null){
+                            UserProfileController controller = (UserProfileController) stage.getScene().getRoot().getUserData();
+                            controller.setShowPhysio(resp.getPhysio());
+                            controller.postInit();
+                            stage.showAndWait();
+                        }
+
+                    }else {
+                        String error = Optional.ofNullable(resp).map(BaseResponse::getErrorMessage).orElse("Unknow error");
+                        MessageUtils.showError("Error to found patient", error);
+                    }
+                })).exceptionally(ex -> {
+                    System.out.println(ex.getMessage());
+                    Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+                    ex.printStackTrace();
+                    return null;
+                });
+            } else if (rol.equals("admin")) {
+                UserService.getProfile().thenAccept(resp -> Platform.runLater(() -> {
+                    if(resp != null && resp.isOk() && resp.getUser() != null){
+                        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/user/UserProfileView.fxml",
+                                "PhysioCare - User Profile");
+
+                        if(stage != null){
+                            UserProfileController controller = (UserProfileController) stage.getScene().getRoot().getUserData();
+                            controller.setProfileAdmin(resp.getUser());
+                            controller.postInit();
+                            stage.showAndWait();
+                        }
+                    }
+                })).exceptionally(ex -> {
+                    System.out.println(ex.getMessage());
+                    Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+                    ex.printStackTrace();
+                    return null;
+                });
+            }
+
+        }
     }
 
     public void handleLogout(ActionEvent actionEvent) throws IOException {

@@ -30,6 +30,14 @@ public class User {
 //        this.avatar = avatar;
 //    }
 
+
+    public User(String id, String login,String email, String rol) {
+        this.id = id;
+        this.login = login;
+        this.email = email;
+        this.rol = rol;
+    }
+
     public String getId() {
         return id;
     }

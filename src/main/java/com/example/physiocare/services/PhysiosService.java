@@ -90,4 +90,23 @@ public class PhysiosService {
             return gson.fromJson(json, BaseResponse.class);
         });
     }
+
+    public static CompletableFuture<PhysioMoreInfoResponse> PhysioProfileMe(){
+
+        if(ServiceUtils.getRol() == null || !ServiceUtils.getRol().equals("physio")){
+            CompletableFuture<PhysioMoreInfoResponse> failed = new CompletableFuture<>();
+            System.out.println("You have no role assigned or you do not have permissions");
+            failed.completeExceptionally(new IllegalArgumentException("You have no role assigned or you do not have permissions"));
+            return failed;
+        }
+
+        String url = URL_PHYSIOS + "/profile/me";
+
+        System.out.println(url);
+
+        return  ServiceUtils.getResponseAsync(url, null,"GET").thenApply(json -> {
+            System.out.println("DEBUG GET PHYSIO PROFILE ME : " + json);
+            return gson.fromJson(json, PhysioMoreInfoResponse.class);
+        });
+    }
 }
