@@ -10,6 +10,7 @@ import com.google.gson.Gson;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public class AppointmentsService {
     private static final String URL_RECORDS = ServiceUtils.SERVER + "/records/";
@@ -94,6 +95,22 @@ public class AppointmentsService {
         return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
             System.out.println("Debug GET UNCONFIRMED APPOINTMENTS : " + json);
             return gson.fromJson(json, AppoinmentListResponse.class);
+        });
+    }
+
+    public static CompletionStage<AppointmentResponse> getAppointmentsByPatientID(String id) {
+        if (id == null || id.isEmpty()) {
+            CompletableFuture<AppointmentResponse> failed = new CompletableFuture<>();
+            System.out.println("Patient ID cannot be null or empty");
+            failed.completeExceptionally(new IllegalArgumentException("Patient ID cannot be null or empty"));
+            return failed;
+        }
+
+        String url = URL_RECORDS + "appointments/patient/" + id;
+
+        return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
+            System.out.println("DEBUG - GET APPOINTMENTS BY PATIENT ID : " + json);
+            return gson.fromJson(json, AppointmentResponse.class);
         });
     }
 }

@@ -9,6 +9,7 @@ module com.example.physiocare {
     requires layout;
     requires kernel;
     requires jsch;
+    requires jakarta.mail;
 
     opens com.example.physiocare.models.auth to com.google.gson;
     opens com.example.physiocare.models.physio to javafx.base, com.google.gson;
