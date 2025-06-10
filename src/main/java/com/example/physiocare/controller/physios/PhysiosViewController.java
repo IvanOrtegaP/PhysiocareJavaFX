@@ -1,8 +1,11 @@
 package com.example.physiocare.controller.physios;
 
+import com.example.physiocare.controller.users.UserProfileController;
+import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.physio.Physio;
 import com.example.physiocare.services.AppointmentsService;
 import com.example.physiocare.services.PhysiosService;
+import com.example.physiocare.services.UserService;
 import com.example.physiocare.utils.MessageUtils;
 import com.example.physiocare.utils.ScreenUtils;
 import com.example.physiocare.utils.ServiceUtils;
@@ -20,6 +23,7 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class PhysiosViewController implements Initializable {
@@ -149,8 +153,29 @@ public class PhysiosViewController implements Initializable {
     }
 
     public void handleViewProfile(ActionEvent actionEvent) {
-        ScreenUtils.loadViewModal("/com/example/physiocare/user/UserProfileView.fxml",
-                "PhysioCare - User Profile");
+        String rol = ServiceUtils.getRol();
+        if(rol != null){
+                if (rol.equals("admin")) {
+                UserService.getProfile().thenAccept(resp -> Platform.runLater(() -> {
+                    if(resp != null && resp.isOk() && resp.getUser() != null){
+                        Stage stage = ScreenUtils.createViewModal("/com/example/physiocare/user/UserProfileView.fxml",
+                                "PhysioCare - User Profile");
+
+                        if(stage != null){
+                            UserProfileController controller = (UserProfileController) stage.getScene().getRoot().getUserData();
+                            controller.setProfileAdmin(resp.getUser());
+                            controller.postInit();
+                            stage.showAndWait();
+                        }
+                    }
+                })).exceptionally(ex -> {
+                    System.out.println(ex.getMessage());
+                    Platform.runLater(() -> MessageUtils.showError("Error", ex.getMessage()));
+                    ex.printStackTrace();
+                    return null;
+                });
+            }
+        }
     }
 
     public void handleConfirmAppointments(ActionEvent actionEvent) {
