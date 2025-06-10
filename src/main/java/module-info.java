@@ -10,6 +10,15 @@ module com.example.physiocare {
     requires kernel;
     requires jsch;
     requires jakarta.mail;
+    requires com.google.api.client;
+    requires com.google.api.client.json.gson;
+    requires com.google.api.client.auth;
+    requires google.api.client;
+    requires com.google.api.services.gmail;
+    requires com.google.api.client.extensions.jetty.auth;
+    requires com.google.api.client.extensions.java6.auth;
+    requires jdk.httpserver;
+
 
     opens com.example.physiocare.models.auth to com.google.gson;
     opens com.example.physiocare.models.physio to javafx.base, com.google.gson;

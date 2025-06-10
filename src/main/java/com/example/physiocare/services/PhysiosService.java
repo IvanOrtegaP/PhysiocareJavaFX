@@ -25,6 +25,16 @@ public class PhysiosService {
         });
     }
 
+    public static CompletableFuture<PhysioMoreInfoListResponse> getPhysiosMore(){
+        String url = URL_PHYSIOS + "/more";
+
+
+        return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
+            System.out.println("DEBUG - Respuesta JSON: " + json);
+            return gson.fromJson(json, PhysioMoreInfoListResponse.class);
+        });
+    }
+
 
     public static CompletableFuture<UserResponse> getPhysioUser(String physioId) {
         if (physioId == null || physioId.isEmpty()) {

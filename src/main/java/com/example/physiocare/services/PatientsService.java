@@ -22,10 +22,11 @@ public class PatientsService {
     private static final String ENDPOINT_URL = ServiceUtils.SERVER + "/patients/more-than-8-appointments";
     private static final Gson gson = new Gson();
 
-    public static List<Patient> fetchPatientsWithAppointments() throws Exception {
-        String jsonResponse = ServiceUtils.getResponseSync(ENDPOINT_URL, null, "GET");
-        Type listType = new TypeToken<List<Patient>>() {}.getType();
-        return gson.fromJson(jsonResponse, listType);
+    public static CompletableFuture<PatientMoreInfoRecorListResponse> getPatientsMoreInfoRecords(){
+        return ServiceUtils.getResponseAsync(ENDPOINT_URL, null, "GET").thenApply(json -> {
+            System.out.println("DEBUG - Respuesta JSON Patients More Info Records: " + json);
+            return gson.fromJson(json, PatientMoreInfoRecorListResponse.class);
+        });
     }
 
     public static CompletableFuture<PatientListResponse> getPatients(String searchQuery) {
@@ -107,59 +108,4 @@ public class PatientsService {
             return gson.fromJson(json, BaseResponse.class);
         });
     }
-
-
-    public static List<PatientMoreInfo> fetchPatientsWithUser() throws Exception {
-        String jsonResponse = ServiceUtils.getResponseSync(ENDPOINT_URL, null, "GET");
-        System.out.println("DEBUG - JSON Response: " + jsonResponse);
-
-        JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
-
-        if (jsonObject.has("patients")) {
-            Type listType = new TypeToken<List<PatientMoreInfo>>() {}.getType();
-            return gson.fromJson(jsonObject.get("patients"), listType);
-        } else {
-            throw new IllegalStateException("Expected 'patients' field in the JSON response.");
-        }
-    }
-
-    public static List<PatientMoreInfo> fetchPatientsWithUserWithHeaders(Map<String, String> headers) throws Exception {
-        String jsonResponse = ServiceUtils.getResponseSync(ENDPOINT_URL, headers, "GET");
-        System.out.println("DEBUG - JSON Response: " + jsonResponse);
-
-        JsonObject jsonObject = JsonParser.parseString(jsonResponse).getAsJsonObject();
-
-        if (jsonObject.has("patients")) {
-            Type listType = new TypeToken<List<PatientMoreInfo>>() {}.getType();
-            return gson.fromJson(jsonObject.get("patients"), listType);
-        } else {
-            throw new IllegalStateException("Expected 'patients' field in the JSON response.");
-        }
-    }
-
-    public static void sendReminders() {
-        try {
-            List<PatientMoreInfo> patients = fetchPatientsWithUser();
-
-            for (PatientMoreInfo patient : patients) {
-                User user = patient.getUser();
-                if (user != null && user.getEmail() != null) {
-                    String email = user.getEmail();
-
-                    String emailBody = "Dear " + patient.getName() + ",\n\n" +
-                            "You have more than 8 appointments. Please note that you only have 2 more appointments left.\n\n" +
-                            "Best regards,\nPhysioCare Team";
-
-                    EmailSender.sendEmail(email, "Appointment Reminder", emailBody, null);
-                } else {
-                    System.err.println("No email found for patient: " + patient.getName());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
 }

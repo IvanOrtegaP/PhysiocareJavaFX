@@ -227,9 +227,6 @@ public class PatientsViewController implements Initializable, RoleAwareControlle
         }
     }
 
-    public void handleEditPatient(ActionEvent actionEvent) {
-    }
-
     public void handleDeletePatient(ActionEvent actionEvent) {
         if (currentPatient == null) return;
         String message = "Are you sure you want to delete " + currentPatient.getName() + "?";
