@@ -1,5 +1,7 @@
 package com.example.physiocare.models.physio;
 
+import com.example.physiocare.models.user.UserResponse;
+import com.example.physiocare.services.PhysiosService;
 import com.google.gson.annotations.SerializedName;
 
 
@@ -37,6 +39,21 @@ public class Physio extends PhysioBase {
 
     public String getUser() {
         return user;
+    }
+
+    public String getEmail() {
+        try {
+            UserResponse userResponse = PhysiosService.getPhysioUser(this.getId()).join();
+
+            if (userResponse != null && userResponse.getUser() != null) {
+                return userResponse.getUser().getEmail();
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching email for physio: " + this.getName());
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public void setUser(String user) {

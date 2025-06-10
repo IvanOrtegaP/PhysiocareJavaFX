@@ -2,6 +2,8 @@ package com.example.physiocare.services;
 
 import com.example.physiocare.models.BaseResponse;
 import com.example.physiocare.models.physio.*;
+import com.example.physiocare.models.user.User;
+import com.example.physiocare.models.user.UserResponse;
 import com.example.physiocare.utils.ServiceUtils;
 import com.google.gson.Gson;
 
@@ -20,6 +22,23 @@ public class PhysiosService {
         return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
             System.out.println("DEBUG - Respuesta JSON: " + json);
             return gson.fromJson(json, PhysioListResponse.class);
+        });
+    }
+
+
+    public static CompletableFuture<UserResponse> getPhysioUser(String physioId) {
+        if (physioId == null || physioId.isEmpty()) {
+            CompletableFuture<UserResponse> failed = new CompletableFuture<>();
+            System.out.println("The physio ID cannot be null or empty");
+            failed.completeExceptionally(new IllegalArgumentException("The physio ID cannot be null or empty"));
+            return failed;
+        }
+
+        String url = URL_PHYSIOS + "/" + physioId + "/user";
+
+        return ServiceUtils.getResponseAsync(url, null, "GET").thenApply(json -> {
+            System.out.println("DEBUG - GET Physio User JSON: " + json);
+            return gson.fromJson(json, UserResponse.class);
         });
     }
 
